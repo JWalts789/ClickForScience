@@ -15,18 +15,45 @@
   import { serializeState } from "../../lib/engine/save";
   import { showToast } from "../../stores/ui.svelte";
 
+  const AUTOSYNC_KEY = "cfs_cloud_autosync";
+
   let user = $state<User | null>(null);
   let email = $state("");
   let password = $state("");
   let isSignUp = $state(false);
   let loading = $state(false);
   let error = $state("");
+  let autoSync = $state(localStorage.getItem(AUTOSYNC_KEY) !== "false");
   let unsubscribe: (() => void) | null = null;
   const available = isCloudAvailable();
+
+  function setAutoSync(val: boolean) {
+    autoSync = val;
+    localStorage.setItem(AUTOSYNC_KEY, String(val));
+  }
 
   onMount(async () => {
     if (!available) return;
     user = await getUser();
+
+    // Auto-load cloud save on return visit if signed in and auto-sync is on
+    if (user && autoSync) {
+      const result = await cloudLoad();
+      if (result.saveData) {
+        // Only load cloud save if it has more playtime than local
+        try {
+          const cloudState = JSON.parse(result.saveData);
+          const localState = getState();
+          if ((cloudState.totalPlaytimeSec ?? 0) > localState.totalPlaytimeSec) {
+            doLoadFromString(result.saveData);
+            showToast("Cloud save loaded automatically.");
+          }
+        } catch {
+          // If parsing fails, just skip auto-load
+        }
+      }
+    }
+
     unsubscribe = onAuthChange((u) => {
       user = u;
     });
@@ -53,8 +80,24 @@
       user = result.user;
       if (isSignUp) {
         showToast("Account created! Check your email to confirm.");
+        // Auto-save to cloud on first sign-up
+        if (autoSync) {
+          const state = getState();
+          await cloudSave(serializeState(state), state.totalPlaytimeSec, state.prestigeCount);
+        }
       } else {
-        showToast("Signed in!");
+        // On sign-in, auto-load cloud save if auto-sync is on
+        if (autoSync) {
+          const loadResult = await cloudLoad();
+          if (loadResult.saveData) {
+            doLoadFromString(loadResult.saveData);
+            showToast("Signed in — cloud save loaded!");
+          } else {
+            showToast("Signed in!");
+          }
+        } else {
+          showToast("Signed in!");
+        }
       }
     }
     loading = false;
@@ -121,6 +164,16 @@
           {loading ? "..." : "Load from Cloud"}
         </button>
       </div>
+
+      <label class="autosync-row">
+        <input
+          type="checkbox"
+          bind:checked={autoSync}
+          onclick={() => { setTimeout(() => setAutoSync(autoSync), 0); }}
+        />
+        <span>Auto-sync on sign in</span>
+        <span class="autosync-hint text-muted">Automatically loads your cloud save when you return</span>
+      </label>
 
       <button class="signout-btn text-muted" onclick={onSignOut} disabled={loading}>
         Sign Out
@@ -300,5 +353,30 @@
   .error-text {
     font-size: var(--text-xs);
     color: var(--color-danger);
+  }
+
+  /* ── Auto-Sync Toggle ──────────────────────────────────────────── */
+
+  .autosync-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    padding: var(--space-xs) 0;
+  }
+
+  .autosync-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-rp);
+    cursor: pointer;
+  }
+
+  .autosync-hint {
+    width: 100%;
+    font-size: var(--text-xs);
+    padding-left: 24px;
   }
 </style>
