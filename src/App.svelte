@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { initGame, doTick, doSave, doClick, getState } from "./stores/game.svelte";
+  import { initMusic } from "./lib/audio/music";
   import { getActiveTab, setActiveTab, setOfflineMessage, getOfflineMessage, flashSaveIndicator, getActiveEvent, type GameTab } from "./stores/ui.svelte";
 
   import Header from "./components/layout/Header.svelte";
@@ -63,6 +64,9 @@
     if (offlineReport) {
       setOfflineMessage(offlineReport);
     }
+
+    // Initialize music (auto-starts on first user interaction)
+    initMusic();
 
     // Start game loop — synced to display refresh (typically 60fps)
     lastTickTime = performance.now();
