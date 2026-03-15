@@ -160,10 +160,11 @@
       <div class="node-grid">
         {#each nodes as node (node.id)}
           {@const status = nodeStatus(node)}
+          {@const isSelected = selectedNode?.id === node.id}
           <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
           <div
             class="node-card {status}"
-            class:selected={selectedNode?.id === node.id}
+            class:selected={isSelected}
             class:archetype-node={!!node.archetypeRequired}
             onclick={() => onNodeClick(node)}
           >
@@ -192,90 +193,90 @@
               <div class="node-exclusive text-muted">Exclusive choice</div>
             {/if}
           </div>
+
+          <!-- Inline detail panel (appears directly under the clicked node) -->
+          {#if isSelected}
+            <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+            <div class="detail-panel card" onclick={(e) => e.stopPropagation()}>
+              <div class="detail-header">
+                <h3 class="detail-name">{node.name}</h3>
+                <button class="detail-close" onclick={() => selectedNode = null}>x</button>
+              </div>
+              <p class="detail-flavor">"{node.flavorText}"</p>
+              <p class="detail-desc">{node.description}</p>
+
+              <div class="detail-meta">
+                <div class="meta-row">
+                  <span class="meta-label">Effects:</span>
+                  <span class="meta-value">{effectSummary(node)}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Cost:</span>
+                  <span class="meta-value mono">{formatNumber(new Decimal(node.ipCost), notation)} IP</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Research Time:</span>
+                  <span class="meta-value">{estimatedTime(node)}</span>
+                </div>
+                <div class="meta-row">
+                  <span class="meta-label">Persists on Prestige:</span>
+                  <span class="meta-value">{node.persistsOnPrestige ? "Yes" : "No (resets each run)"}</span>
+                </div>
+                {#if node.requires.length > 0}
+                  <div class="meta-row">
+                    <span class="meta-label">Requires:</span>
+                    <span class="meta-value">
+                      {node.requires.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}
+                    </span>
+                  </div>
+                {/if}
+                {#if node.requiresAny && node.requiresAny.length > 0}
+                  <div class="meta-row">
+                    <span class="meta-label">Requires (any):</span>
+                    <span class="meta-value">
+                      {node.requiresAny.map((r) => getResearchNodeDef(r)?.name ?? r).join(" or ")}
+                    </span>
+                  </div>
+                {/if}
+                {#if node.exclusive && node.exclusive.length > 0}
+                  <div class="meta-row">
+                    <span class="meta-label">Exclusive with:</span>
+                    <span class="meta-value text-warning">
+                      {node.exclusive.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}
+                    </span>
+                  </div>
+                {/if}
+                {#if node.archetypeRequired}
+                  <div class="meta-row">
+                    <span class="meta-label">Archetype:</span>
+                    <span class="meta-value">{node.archetypeRequired}</span>
+                  </div>
+                {/if}
+              </div>
+
+              {#if status === "available" && !activeResearch}
+                <button
+                  class="start-btn"
+                  disabled={!canAfford(node)}
+                  onclick={onStartResearch}
+                >
+                  {canAfford(node) ? "Start Research" : "Not enough IP"}
+                </button>
+              {:else if status === "available" && activeResearch}
+                <p class="detail-hint text-muted">Finish current research first.</p>
+              {:else if status === "completed"}
+                <p class="detail-hint text-rp">Research complete!</p>
+              {:else if status === "active"}
+                <p class="detail-hint">Currently researching... {(researchProgress * 100).toFixed(1)}%</p>
+              {:else}
+                <p class="detail-hint text-muted">Prerequisites not met.</p>
+              {/if}
+            </div>
+          {/if}
         {/each}
       </div>
     </div>
   {/each}
-
-  <!-- Detail Panel (when a node is selected) -->
-  {#if selectedNode}
-    {@const status = nodeStatus(selectedNode)}
-    <div class="detail-panel card">
-      <div class="detail-header">
-        <h3 class="detail-name">{selectedNode.name}</h3>
-        <button class="detail-close" onclick={() => selectedNode = null}>x</button>
-      </div>
-      <p class="detail-flavor">"{selectedNode.flavorText}"</p>
-      <p class="detail-desc">{selectedNode.description}</p>
-
-      <div class="detail-meta">
-        <div class="meta-row">
-          <span class="meta-label">Effects:</span>
-          <span class="meta-value">{effectSummary(selectedNode)}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Cost:</span>
-          <span class="meta-value mono">{formatNumber(new Decimal(selectedNode.ipCost), notation)} IP</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Research Time:</span>
-          <span class="meta-value">{estimatedTime(selectedNode)}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Persists on Prestige:</span>
-          <span class="meta-value">{selectedNode.persistsOnPrestige ? "Yes" : "No (resets each run)"}</span>
-        </div>
-        {#if selectedNode.requires.length > 0}
-          <div class="meta-row">
-            <span class="meta-label">Requires:</span>
-            <span class="meta-value">
-              {selectedNode.requires.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}
-            </span>
-          </div>
-        {/if}
-        {#if selectedNode.requiresAny && selectedNode.requiresAny.length > 0}
-          <div class="meta-row">
-            <span class="meta-label">Requires (any):</span>
-            <span class="meta-value">
-              {selectedNode.requiresAny.map((r) => getResearchNodeDef(r)?.name ?? r).join(" or ")}
-            </span>
-          </div>
-        {/if}
-        {#if selectedNode.exclusive && selectedNode.exclusive.length > 0}
-          <div class="meta-row">
-            <span class="meta-label">Exclusive with:</span>
-            <span class="meta-value text-warning">
-              {selectedNode.exclusive.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}
-            </span>
-          </div>
-        {/if}
-        {#if selectedNode.archetypeRequired}
-          <div class="meta-row">
-            <span class="meta-label">Archetype:</span>
-            <span class="meta-value">{selectedNode.archetypeRequired}</span>
-          </div>
-        {/if}
-      </div>
-
-      {#if status === "available" && !activeResearch}
-        <button
-          class="start-btn"
-          disabled={!canAfford(selectedNode)}
-          onclick={onStartResearch}
-        >
-          {canAfford(selectedNode) ? "Start Research" : "Not enough IP"}
-        </button>
-      {:else if status === "available" && activeResearch}
-        <p class="detail-hint text-muted">Finish current research first.</p>
-      {:else if status === "completed"}
-        <p class="detail-hint text-rp">Research complete!</p>
-      {:else if status === "active"}
-        <p class="detail-hint">Currently researching... {(researchProgress * 100).toFixed(1)}%</p>
-      {:else}
-        <p class="detail-hint text-muted">Prerequisites not met.</p>
-      {/if}
-    </div>
-  {/if}
 
   <!-- Lab Expansion Section -->
   <div class="lab-section">
@@ -581,15 +582,19 @@
     color: var(--color-warning);
   }
 
-  /* Detail Panel */
+  /* Detail Panel (inline under selected node) */
   .detail-panel {
-    position: sticky;
-    bottom: var(--space-md);
-    margin-top: var(--space-lg);
+    grid-column: 1 / -1;
     padding: var(--space-md) var(--space-lg);
     border-color: #ffcb6b;
     background: rgba(26, 29, 39, 0.95);
     backdrop-filter: blur(8px);
+    animation: detail-slide-in 200ms ease;
+  }
+
+  @keyframes detail-slide-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .detail-header {
