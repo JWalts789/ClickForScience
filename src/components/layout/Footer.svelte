@@ -1,0 +1,169 @@
+<script lang="ts">
+  import { doSave, doExport, doHardReset } from "../../stores/game.svelte";
+  import { showToast, getLastSaveFlash, flashSaveIndicator } from "../../stores/ui.svelte";
+  import {
+    toggleMusic,
+    skipTrack,
+    getMusicVolume,
+    setMusicVolume,
+    toggleMute,
+    isMuted,
+  } from "../../lib/audio/music";
+
+  const savedFlash = $derived(getLastSaveFlash());
+
+  // Music state — reactive via manual tracking since audio is external
+  let musicPlaying = $state(false);
+  let musicMuted = $state(isMuted());
+  let musicVolume = $state(getMusicVolume());
+
+  function onToggleMusic() {
+    musicPlaying = toggleMusic();
+  }
+
+  function onSkip() {
+    skipTrack();
+  }
+
+  function onToggleMute() {
+    musicMuted = toggleMute();
+  }
+
+  function onVolumeChange(e: Event) {
+    const val = Number((e.target as HTMLInputElement).value) / 100;
+    setMusicVolume(val);
+    musicVolume = val;
+  }
+
+  function onSave() {
+    doSave();
+    flashSaveIndicator();
+    showToast("Game saved!");
+  }
+
+  function onExport() {
+    const code = doExport();
+    navigator.clipboard.writeText(code).then(() => {
+      showToast("Save exported to clipboard!");
+    }).catch(() => {
+      // Fallback: show in a prompt
+      window.prompt("Copy this save code:", code);
+    });
+  }
+
+  function onHardReset() {
+    if (confirm("Are you sure? This will DELETE all progress permanently.")) {
+      if (confirm("Really? There's no going back.")) {
+        doHardReset();
+        showToast("Game reset. Fresh start!");
+      }
+    }
+  }
+</script>
+
+<footer class="footer">
+  <div class="footer-actions">
+    <button onclick={onSave}>Save</button>
+    <button onclick={onExport}>Export</button>
+    <button class="danger" onclick={onHardReset}>Hard Reset</button>
+  </div>
+
+  <div class="music-controls">
+    <button class="music-btn" onclick={onToggleMusic} title={musicPlaying ? "Pause" : "Play"}>
+      {musicPlaying ? "⏸" : "▶"}
+    </button>
+    <button class="music-btn" onclick={onSkip} title="Skip track">⏭</button>
+    <button class="music-btn" onclick={onToggleMute} title={musicMuted ? "Unmute" : "Mute"}>
+      {musicMuted ? "🔇" : musicVolume < 0.3 ? "🔈" : musicVolume < 0.7 ? "🔉" : "🔊"}
+    </button>
+    <input
+      type="range"
+      class="volume-slider"
+      min="0"
+      max="100"
+      value={musicVolume * 100}
+      oninput={onVolumeChange}
+      title="Volume"
+    />
+  </div>
+
+  <span class="footer-info text-muted">
+    {#if savedFlash}<span class="saved-indicator">Saved</span>{/if}
+    Click, For Science! v0.1.0
+  </span>
+</footer>
+
+<style>
+  .footer {
+    background: rgba(26, 29, 39, 0.8);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border-color);
+    padding: var(--space-sm) var(--space-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  .footer-info {
+    font-size: var(--text-xs);
+  }
+
+  /* ── Music Controls ──────────────────────────────────────────────── */
+
+  .music-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .music-btn {
+    padding: 2px 6px;
+    font-size: var(--text-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: border-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .music-btn:hover {
+    border-color: var(--color-rp);
+    color: var(--text-primary);
+  }
+
+  .volume-slider {
+    width: 64px;
+    accent-color: var(--color-rp);
+    cursor: pointer;
+  }
+
+  .danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+
+  .danger:hover:not(:disabled) {
+    background: rgba(240, 113, 120, 0.1);
+  }
+
+  .saved-indicator {
+    color: var(--color-rp);
+    font-size: var(--text-xs);
+    margin-right: var(--space-sm);
+    animation: fade-in-out 1.5s ease forwards;
+  }
+
+  @keyframes fade-in-out {
+    0% { opacity: 0; }
+    15% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+</style>
