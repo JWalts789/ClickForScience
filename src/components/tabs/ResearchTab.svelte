@@ -31,6 +31,7 @@
     activeResearch ? getResearchNodeDef(activeResearch.nodeId) : null
   );
   const researchProgress = $derived.by(() => {
+    void rev; // re-derive every tick
     if (!activeResearch || !activeNodeDef) return 0;
     const total = activeNodeDef.researchTimeSec;
     const remaining = activeResearch.remainingSec;
@@ -38,6 +39,7 @@
   });
   // Wall-clock seconds remaining (remainingSec ticks down at speedMult rate)
   const researchWallTimeRemaining = $derived.by(() => {
+    void rev; // re-derive every tick
     if (!activeResearch) return 0;
     const speed = researchSpeedMultiplier(state).toNumber();
     return speed > 0 ? activeResearch.remainingSec / speed : activeResearch.remainingSec;

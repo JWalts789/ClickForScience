@@ -30,9 +30,7 @@
   let playerRank = $state<number | null>(null);
   let totalEntries = $state(0);
   let loading = $state(false);
-  let submitting = $state(false);
   let lastError = $state("");
-  let lastSuccess = $state("");
   let lastFetchKey = $state("");
   let isLive = $state(false);
 
@@ -46,7 +44,7 @@
   const POLL_INTERVAL_MS = 30_000;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Auto-submit every 2 minutes so scores stay fresh
+  // Auto-submit all categories every 2 minutes so scores stay fresh
   const AUTO_SUBMIT_INTERVAL_MS = 120_000;
   let autoSubmitTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -68,7 +66,7 @@
 
       // Auto-submit scores if player has a name
       autoSubmitTimer = setInterval(() => {
-        if (hasPlayerName()) doAutoSubmit();
+        if (hasPlayerName()) doAutoSubmitAll();
       }, AUTO_SUBMIT_INTERVAL_MS);
     }
   }
@@ -86,6 +84,8 @@
       lastFetchKey = key;
       setupRealtimeAndPolling(activeCategory, activeTimeframe);
       doFetch();
+      // Auto-submit all scores on first load
+      if (hasPlayerName()) doAutoSubmitAll();
     }
   });
 
@@ -103,19 +103,22 @@
     loading = false;
   }
 
-  /** Silently submit current category score in the background. */
-  async function doAutoSubmit() {
-    const pv = getPlayerValue(activeCategory);
-    if (pv.value <= 0 || !isFinite(pv.value)) return;
-    await submitScore(
-      activeCategory,
-      pv.value,
-      pv.mantissa,
-      pv.exponent,
-      state.madness.dominantArchetype,
-      state.totalPlaytimeSec,
-      state.prestigeCount
-    );
+  /** Silently submit all category scores in the background. */
+  async function doAutoSubmitAll() {
+    for (const cat of LEADERBOARD_CATEGORIES) {
+      const pv = getPlayerValue(cat.id);
+      if (cat.id === "fastestPrestige" && (state.fastestPrestigeSec == null || state.fastestPrestigeSec <= 0)) continue;
+      if (pv.value <= 0 || !isFinite(pv.value)) continue;
+      await submitScore(
+        cat.id,
+        pv.value,
+        pv.mantissa,
+        pv.exponent,
+        state.madness.dominantArchetype,
+        state.totalPlaytimeSec,
+        state.prestigeCount
+      );
+    }
   }
 
   function getPlayerValue(cat: LeaderboardCategory): { value: number; mantissa: number; exponent: number } {
@@ -138,68 +141,6 @@
         return { value: d.toNumber(), mantissa: d.mantissa, exponent: d.exponent };
       }
     }
-  }
-
-  async function onSubmit() {
-    if (!hasPlayerName()) {
-      showNamePrompt = true;
-      return;
-    }
-    submitting = true;
-    lastError = "";
-    lastSuccess = "";
-
-    const pv = getPlayerValue(activeCategory);
-    const result = await submitScore(
-      activeCategory,
-      pv.value,
-      pv.mantissa,
-      pv.exponent,
-      state.madness.dominantArchetype,
-      state.totalPlaytimeSec,
-      state.prestigeCount
-    );
-
-    if (result.success) {
-      lastSuccess = "Score submitted!";
-      await doFetch();
-    } else {
-      lastError = result.error ?? "Submission failed.";
-    }
-    submitting = false;
-  }
-
-  async function onSubmitAll() {
-    if (!hasPlayerName()) {
-      showNamePrompt = true;
-      return;
-    }
-    submitting = true;
-    lastError = "";
-    lastSuccess = "";
-
-    let successes = 0;
-    for (const cat of LEADERBOARD_CATEGORIES) {
-      const pv = getPlayerValue(cat.id);
-      // Skip categories where player has no meaningful value
-      if (cat.id === "fastestPrestige" && (state.fastestPrestigeSec == null || state.fastestPrestigeSec <= 0)) continue;
-      if (pv.value <= 0 || !isFinite(pv.value)) continue;
-
-      const result = await submitScore(
-        cat.id,
-        pv.value,
-        pv.mantissa,
-        pv.exponent,
-        state.madness.dominantArchetype,
-        state.totalPlaytimeSec,
-        state.prestigeCount
-      );
-      if (result.success) successes++;
-    }
-
-    lastSuccess = `Submitted ${successes} score${successes !== 1 ? "s" : ""}!`;
-    await doFetch();
-    submitting = false;
   }
 
   function formatEntryValue(entry: LeaderboardEntry, cat: LeaderboardCategory): string {
@@ -285,22 +226,6 @@
         onclick={() => { activeTimeframe = "weekly"; }}
       >This Week</button>
 
-      <div class="spacer"></div>
-
-      <button
-        class="submit-btn"
-        disabled={submitting}
-        onclick={onSubmit}
-      >
-        {submitting ? "..." : "Submit Score"}
-      </button>
-      <button
-        class="submit-all-btn"
-        disabled={submitting}
-        onclick={onSubmitAll}
-      >
-        {submitting ? "..." : "Submit All"}
-      </button>
     </div>
 
     <!-- My score -->
@@ -315,15 +240,12 @@
     {#if lastError}
       <p class="msg error-msg">{lastError}</p>
     {/if}
-    {#if lastSuccess}
-      <p class="msg success-msg">{lastSuccess}</p>
-    {/if}
 
     <!-- Leaderboard table -->
     {#if loading}
       <div class="loading text-muted">Loading...</div>
     {:else if entries.length === 0}
-      <div class="empty text-muted">No entries yet. Be the first to submit!</div>
+      <div class="empty text-muted">No entries yet — scores auto-submit as you play!</div>
     {:else}
       <div class="lb-table">
         <div class="lb-row lb-header-row">
@@ -473,41 +395,6 @@
     color: var(--color-ip);
   }
 
-  .spacer {
-    flex: 1;
-  }
-
-  .submit-btn, .submit-all-btn {
-    padding: var(--space-xs) var(--space-sm);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    border: 1px solid var(--color-rp);
-    border-radius: var(--radius-sm);
-    background: rgba(199, 146, 234, 0.15);
-    color: var(--color-rp);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-
-  .submit-btn:hover, .submit-all-btn:hover {
-    background: rgba(199, 146, 234, 0.3);
-  }
-
-  .submit-btn:disabled, .submit-all-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .submit-all-btn {
-    border-color: var(--color-ip);
-    background: rgba(130, 170, 255, 0.1);
-    color: var(--color-ip);
-  }
-
-  .submit-all-btn:hover {
-    background: rgba(130, 170, 255, 0.25);
-  }
-
   /* ── My Score ──────────────────────────────────────────────────── */
 
   .my-score {
@@ -548,11 +435,6 @@
   .error-msg {
     color: var(--color-danger);
     background: rgba(255, 83, 112, 0.1);
-  }
-
-  .success-msg {
-    color: #50c878;
-    background: rgba(80, 200, 120, 0.1);
   }
 
   /* ── Leaderboard Table ─────────────────────────────────────────── */
