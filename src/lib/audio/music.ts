@@ -70,6 +70,18 @@ export function initMusic(): void {
 
   // Build initial shuffled queue
   buildQueue();
+
+  // Auto-start on first user interaction (browsers require a gesture)
+  function autoStart() {
+    if (!started) {
+      started = true;
+      playNext();
+    }
+    document.removeEventListener("pointerdown", autoStart);
+    document.removeEventListener("keydown", autoStart);
+  }
+  document.addEventListener("pointerdown", autoStart, { once: true });
+  document.addEventListener("keydown", autoStart, { once: true });
 }
 
 /** Start playback (must be called from a user gesture the first time). */
