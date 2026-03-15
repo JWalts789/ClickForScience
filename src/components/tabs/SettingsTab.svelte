@@ -2,6 +2,7 @@
   import { getState, doSave, doExport, doImport, doHardReset } from "../../stores/game.svelte";
   import { showToast } from "../../stores/ui.svelte";
   import type { Notation } from "../../lib/utils/format";
+  import CloudSavePanel from "../shared/CloudSavePanel.svelte";
 
   const state = $derived(getState());
 
@@ -107,6 +108,14 @@
         Import Save
       </button>
     </div>
+  </div>
+
+  <div class="setting-group cloud-section">
+    <h3>Cloud Save</h3>
+    <p class="cloud-desc text-muted">
+      Sign in to save your progress to the cloud and play on any device.
+    </p>
+    <CloudSavePanel />
   </div>
 
   <div class="setting-group support-section">
@@ -217,6 +226,19 @@
     font-size: var(--text-sm);
     min-width: 35px;
     text-align: right;
+  }
+
+  /* ── Cloud Save Section ─────────────────────────────────────── */
+
+  .cloud-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--space-lg);
+  }
+
+  .cloud-desc {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-sm);
+    line-height: 1.5;
   }
 
   /* ── Support Section ──────────────────────────────────────────── */

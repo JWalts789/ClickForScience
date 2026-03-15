@@ -8,7 +8,7 @@ const SAVE_KEY = "clickforscience_save";
 // ── Serialization Helpers ───────────────────────────────────────────
 
 /** Convert Decimals to strings for JSON. */
-function serializeState(state: GameState): string {
+export function serializeState(state: GameState): string {
   const plain = {
     ...state,
     rp: state.rp.toString(),
@@ -47,7 +47,7 @@ function serializeState(state: GameState): string {
 }
 
 /** Restore Decimals from parsed JSON. */
-function deserializeState(raw: string): GameState {
+export function deserializeState(raw: string): GameState {
   const parsed = JSON.parse(raw);
   const fresh = createInitialState();
 

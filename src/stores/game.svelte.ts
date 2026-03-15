@@ -2,7 +2,7 @@ import { Decimal } from "../lib/utils/decimal";
 import { createInitialState, type GameState } from "../lib/engine/state";
 import { gameTick } from "../lib/engine/tick";
 import { handleClick, purchaseGenerator, purchaseUpgrade, doPrestige as enginePrestige, purchasePrestigeUpgrade, getLastCompletedChallenge } from "../lib/engine/actions";
-import { saveGame, loadGame, exportSave, importSave, deleteSave } from "../lib/engine/save";
+import { saveGame, loadGame, exportSave, importSave, deleteSave, deserializeState } from "../lib/engine/save";
 import { calculateOfflineProgress, applyOfflineProgress } from "../lib/engine/offline";
 import { totalProduction, clickValue, breakthroughPointsOnPrestige } from "../lib/engine/formulas";
 import { ipPerSecond, startResearch, cancelResearch, isResearchAvailable, isResearchComplete, isResearchVisible } from "../lib/engine/research";
@@ -391,6 +391,19 @@ export function doImport(encoded: string): boolean {
     return true;
   }
   return false;
+}
+
+/** Load from a raw JSON string (used by cloud save). */
+export function doLoadFromString(raw: string): boolean {
+  try {
+    const loaded = deserializeState(raw);
+    state = loaded;
+    notify();
+    return true;
+  } catch (e) {
+    console.error("Failed to load from string:", e);
+    return false;
+  }
 }
 
 export function doHardReset(): void {
