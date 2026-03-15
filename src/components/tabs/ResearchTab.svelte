@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount } from "svelte";
   import { getState, getIPPerSec, getRevision, doStartResearch, doCancelResearch, doLabExpansion } from "../../stores/game.svelte";
   import { formatNumber, formatRate } from "../../lib/utils/format";
   import { formatTime } from "../../lib/utils/time";
   import { isResearchAvailable, isResearchComplete, isResearchVisible, researchSpeedMultiplier } from "../../lib/engine/research";
   import { RESEARCH_NODES, RESEARCH_TIERS, MAX_TREE_COL, getResearchNodeDef } from "../../lib/data/research.data";
-  import { LAB_EXPANSIONS, getNextLabExpansion, MAX_LAB_LEVEL, getLabExpansionDef } from "../../lib/data/lab-expansions.data";
+  import { getNextLabExpansion, MAX_LAB_LEVEL, getLabExpansionDef } from "../../lib/data/lab-expansions.data";
   import { canPurchaseLabExpansion } from "../../lib/engine/lab-expansion";
   import type { ResearchNodeDef } from "../../lib/data/research.data";
   import { Decimal } from "../../lib/utils/decimal";
@@ -16,38 +16,43 @@
   const ipPerSec = $derived(getIPPerSec());
 
   // ── Tree Layout Constants ──────────────────────────────────────────
-  const CELL_W = 175;
-  const CELL_H = 190;
-  const NODE_W = 155;
-  const NODE_H = 100;
-  const PADDING = 40;
+  const CELL_W = 180;
+  const CELL_H = 200;
+  const NODE_W = 158;
+  const NODE_H = 105;
+  const PADDING = 50;
+  const DETAIL_H = 280;
 
-  // Compute visible nodes for tree rendering
+  let selectedNode = $state<ResearchNodeDef | null>(null);
+
   const visibleNodes = $derived.by(() => {
     void rev;
     return RESEARCH_NODES.filter((n) => isResearchVisible(state, n.id));
   });
 
-  // Canvas dimensions based on visible nodes
+  // Extra height for detail panel when shown
+  const detailExtraHeight = $derived(selectedNode ? DETAIL_H + 20 : 0);
+
   const canvasWidth = $derived(
     Math.max(800, (MAX_TREE_COL + 1) * CELL_W + PADDING * 2)
   );
   const canvasHeight = $derived(
-    RESEARCH_TIERS.length * CELL_H + PADDING * 2
+    RESEARCH_TIERS.length * CELL_H + PADDING * 2 + detailExtraHeight
   );
 
-  // Node position helpers
-  function nodeX(node: ResearchNodeDef): number {
-    return PADDING + node.treeCol * CELL_W + (CELL_W - NODE_W) / 2;
+  function nodeX(n: ResearchNodeDef): number {
+    return PADDING + n.treeCol * CELL_W + (CELL_W - NODE_W) / 2;
   }
-  function nodeY(node: ResearchNodeDef): number {
-    return PADDING + (node.tier - 1) * CELL_H + (CELL_H - NODE_H) / 2;
+  function nodeY(n: ResearchNodeDef): number {
+    // Shift nodes below the selected node's tier down to make room for the detail panel
+    let base = PADDING + (n.tier - 1) * CELL_H + (CELL_H - NODE_H) / 2;
+    if (selectedNode && n.tier > selectedNode.tier) {
+      base += detailExtraHeight;
+    }
+    return base;
   }
-  function nodeCenterX(node: ResearchNodeDef): number {
-    return nodeX(node) + NODE_W / 2;
-  }
-  function nodeCenterY(node: ResearchNodeDef): number {
-    return nodeY(node) + NODE_H / 2;
+  function nodeCenterX(n: ResearchNodeDef): number {
+    return nodeX(n) + NODE_W / 2;
   }
 
   // Build prerequisite connection lines
@@ -98,17 +103,10 @@
     return speed > 0 ? activeResearch.remainingSec / speed : activeResearch.remainingSec;
   });
 
-  // Selected node for detail panel
-  let selectedNode = $state<ResearchNodeDef | null>(null);
-
   // Lab expansion
   const currentLabDef = $derived(getLabExpansionDef(state.labLevel));
   const nextLabDef = $derived(getNextLabExpansion(state.labLevel));
   const canExpandLab = $derived.by(() => { void rev; return canPurchaseLabExpansion(state); });
-
-  function onExpandLab() {
-    doLabExpansion();
-  }
 
   function nodeStatus(node: ResearchNodeDef): "completed" | "active" | "available" | "locked" {
     void rev;
@@ -164,12 +162,27 @@
     return labels[tier] ?? `Tier ${tier}`;
   }
 
-  // SVG bezier curve path
+  // Node branch color (subtle tint based on position)
+  function nodeGlow(node: ResearchNodeDef): string {
+    if (node.archetypeRequired) return "199, 146, 234"; // purple
+    if (node.treeCol <= 6) return "195, 232, 141";      // green - production/click left
+    if (node.treeCol <= 14) return "255, 203, 107";      // gold - trunk/synergy
+    return "130, 170, 255";                              // blue - insight/efficiency right
+  }
+
   function connectionPath(c: { x1: number; y1: number; x2: number; y2: number }): string {
     const dy = c.y2 - c.y1;
-    const cp = dy * 0.4;
+    const cp = Math.min(dy * 0.45, 80);
     return `M ${c.x1} ${c.y1} C ${c.x1} ${c.y1 + cp}, ${c.x2} ${c.y2 - cp}, ${c.x2} ${c.y2}`;
   }
+
+  // Detail panel position (below the selected node)
+  const detailX = $derived(
+    selectedNode ? Math.max(8, nodeCenterX(selectedNode) - 170) : 0
+  );
+  const detailY = $derived(
+    selectedNode ? nodeY(selectedNode) + NODE_H + 10 : 0
+  );
 
   // ── Pan / Drag ──────────────────────────────────────────────────
   let containerEl = $state<HTMLDivElement | undefined>();
@@ -181,7 +194,7 @@
 
   function onPanStart(e: PointerEvent) {
     const target = e.target as HTMLElement;
-    if (target.closest(".tree-node, .detail-overlay, button")) return;
+    if (target.closest(".tree-node, .detail-panel, button")) return;
     isPanning = true;
     panStartX = e.clientX;
     panStartY = e.clientY;
@@ -203,10 +216,9 @@
     document.removeEventListener("pointerup", onPanEnd);
   }
 
-  // Scroll to center on mount
   onMount(() => {
     if (containerEl) {
-      const centerCol = 12;
+      const centerCol = 10;
       containerEl.scrollLeft = Math.max(0, centerCol * CELL_W - containerEl.clientWidth / 2);
     }
   });
@@ -215,29 +227,36 @@
 <div class="research-tab">
   <!-- IP Header -->
   <div class="ip-header">
-    <div class="ip-display">
-      <span class="ip-label">Insight Points</span>
-      <span class="ip-value mono">{formatNumber(state.ip, notation)} IP</span>
+    <div class="ip-col">
+      <span class="ip-tiny">Insight Points</span>
+      <span class="ip-value mono">{formatNumber(state.ip, notation)}</span>
     </div>
-    <div class="ip-rate">
-      <span class="ip-label">IP Rate</span>
-      <span class="ip-rate-value mono">{formatRate(ipPerSec, notation)} IP</span>
+    <div class="ip-divider"></div>
+    <div class="ip-col">
+      <span class="ip-tiny">IP / sec</span>
+      <span class="ip-rate-value mono">{formatRate(ipPerSec, notation)}</span>
+    </div>
+    <div class="ip-divider"></div>
+    <div class="ip-col">
+      <span class="ip-tiny">Researched</span>
+      <span class="ip-count mono">{state.completedResearch.length + state.runCompletedResearch.length}<span class="ip-total">/{RESEARCH_NODES.length}</span></span>
     </div>
   </div>
 
   <!-- Active Research Bar -->
   {#if activeResearch && activeNodeDef}
-    <div class="active-research card">
-      <div class="active-header">
-        <span class="active-label">Researching:</span>
+    <div class="active-research">
+      <div class="active-top">
+        <span class="active-icon">&#9881;</span>
         <span class="active-name">{activeNodeDef.name}</span>
-        <button class="cancel-btn" onclick={onCancelResearch}>Cancel (50% refund)</button>
+        <span class="active-pct mono">{(researchProgress * 100).toFixed(0)}%</span>
+        <button class="cancel-btn" onclick={onCancelResearch}>Cancel</button>
       </div>
-      <div class="progress-bar-container">
-        <div class="progress-bar" style="width: {researchProgress * 100}%"></div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {researchProgress * 100}%"></div>
       </div>
-      <div class="active-footer text-muted">
-        {(researchProgress * 100).toFixed(1)}% — {formatTime(researchWallTimeRemaining)} remaining
+      <div class="active-bottom text-muted">
+        {formatTime(researchWallTimeRemaining)} remaining
       </div>
     </div>
   {/if}
@@ -245,9 +264,7 @@
   <!-- Corkboard Title -->
   <div class="corkboard-header">
     <h2 class="corkboard-title">Gary's Corkboard</h2>
-    <p class="corkboard-desc text-muted">
-      Red string connects the ideas. Drag to pan. Click a node for details.
-    </p>
+    <p class="corkboard-sub text-muted">Drag to pan &middot; Click a node for details</p>
   </div>
 
   <!-- Tree Viewport -->
@@ -262,24 +279,54 @@
       class="tree-canvas"
       style="width: {canvasWidth}px; height: {canvasHeight}px;"
     >
-      <!-- SVG Connection Lines -->
+      <!-- SVG Layer -->
       <svg class="tree-svg" width={canvasWidth} height={canvasHeight}>
-        {#each connections as c (c.x1 + ',' + c.y1 + ',' + c.x2 + ',' + c.y2)}
-          <path
-            d={connectionPath(c)}
-            class="conn-line {c.status}"
-            fill="none"
+        <defs>
+          <!-- Glow filter for active connections -->
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <linearGradient id="grad-completed" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#82aaff" />
+            <stop offset="100%" stop-color="#6a8fdb" />
+          </linearGradient>
+          <linearGradient id="grad-available" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffcb6b" />
+            <stop offset="100%" stop-color="#f0a030" />
+          </linearGradient>
+        </defs>
+
+        <!-- Tier divider lines -->
+        {#each RESEARCH_TIERS as tier}
+          {@const y = PADDING + (tier - 1) * CELL_H + (selectedNode && tier > selectedNode.tier ? detailExtraHeight : 0)}
+          <line
+            x1="0" y1={y - 2} x2={canvasWidth} y2={y - 2}
+            stroke="rgba(255,203,107,0.06)" stroke-width="1"
           />
+        {/each}
+
+        <!-- Connection Lines -->
+        {#each connections as c (c.x1 + ',' + c.y1 + ',' + c.x2 + ',' + c.y2)}
+          {#if c.status === "completed"}
+            <path d={connectionPath(c)} class="conn completed" fill="none" stroke="url(#grad-completed)" />
+          {:else if c.status === "available"}
+            <path d={connectionPath(c)} class="conn available" fill="none" stroke="url(#grad-available)" filter="url(#glow)" />
+          {:else}
+            <path d={connectionPath(c)} class="conn locked" fill="none" />
+          {/if}
         {/each}
       </svg>
 
       <!-- Tier Labels -->
       {#each RESEARCH_TIERS as tier}
-        <div
-          class="tier-label"
-          style="top: {PADDING + (tier - 1) * CELL_H - 10}px; left: 8px;"
-        >
-          T{tier}: {tierLabel(tier)}
+        {@const ty = PADDING + (tier - 1) * CELL_H + (selectedNode && tier > selectedNode.tier ? detailExtraHeight : 0)}
+        <div class="tier-tag" style="top: {ty + 2}px;">
+          <span class="tier-num">T{tier}</span>
+          <span class="tier-text">{tierLabel(tier)}</span>
         </div>
       {/each}
 
@@ -287,118 +334,102 @@
       {#each visibleNodes as node (node.id)}
         {@const status = nodeStatus(node)}
         {@const isSelected = selectedNode?.id === node.id}
+        {@const glow = nodeGlow(node)}
         <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
         <div
           class="tree-node {status}"
           class:selected={isSelected}
           class:archetype-node={!!node.archetypeRequired}
-          style="left: {nodeX(node)}px; top: {nodeY(node)}px; width: {NODE_W}px;"
+          style="left: {nodeX(node)}px; top: {nodeY(node)}px; width: {NODE_W}px; --node-glow: {glow};"
           onclick={() => onNodeClick(node)}
         >
-          <div class="node-name">
+          <div class="node-top-bar {status}"></div>
+          <div class="node-title">
             {node.name}
+          </div>
+          <div class="node-badges">
             {#if status === "completed"}
-              <span class="badge done">Done</span>
+              <span class="nbadge done">Completed</span>
             {:else if status === "active"}
-              <span class="badge active">Active</span>
+              <span class="nbadge researching">Researching</span>
             {:else if node.persistsOnPrestige}
-              <span class="badge perm">Perm</span>
+              <span class="nbadge perm">Permanent</span>
+            {/if}
+            {#if node.exclusive && node.exclusive.length > 0 && status !== "completed"}
+              <span class="nbadge choice">Exclusive</span>
+            {/if}
+            {#if node.archetypeRequired}
+              <span class="nbadge arch">{node.archetypeRequired}</span>
             {/if}
           </div>
-          <div class="node-effects text-muted">{effectSummary(node)}</div>
+          <div class="node-effect">{effectSummary(node)}</div>
           {#if status !== "completed" && status !== "active"}
             <div class="node-cost mono" class:affordable={canAfford(node) && status === "available"}>
-              {formatNumber(new Decimal(node.ipCost), notation)} IP
+              {formatNumber(new Decimal(node.ipCost), notation)} IP &middot; {estimatedTime(node)}
             </div>
-          {/if}
-          {#if node.exclusive && node.exclusive.length > 0 && status !== "completed"}
-            <div class="node-exclusive">Choice</div>
           {/if}
         </div>
       {/each}
-    </div>
-  </div>
 
-  <!-- Detail Overlay (floating panel) -->
-  {#if selectedNode}
-    {@const status = nodeStatus(selectedNode)}
-    <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
-    <div class="detail-overlay card" onclick={(e) => e.stopPropagation()}>
-      <div class="detail-header">
-        <h3 class="detail-name">{selectedNode.name}</h3>
-        <button class="detail-close" onclick={() => selectedNode = null}>x</button>
-      </div>
-      <p class="detail-flavor">"{selectedNode.flavorText}"</p>
-      <p class="detail-desc">{selectedNode.description}</p>
-
-      <div class="detail-meta">
-        <div class="meta-row">
-          <span class="meta-label">Effects:</span>
-          <span class="meta-value">{effectSummary(selectedNode)}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Cost:</span>
-          <span class="meta-value mono">{formatNumber(new Decimal(selectedNode.ipCost), notation)} IP</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Research Time:</span>
-          <span class="meta-value">{estimatedTime(selectedNode)}</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-label">Prestige:</span>
-          <span class="meta-value">{selectedNode.persistsOnPrestige ? "Permanent" : "Resets each run"}</span>
-        </div>
-        {#if selectedNode.requires.length > 0}
-          <div class="meta-row">
-            <span class="meta-label">Requires:</span>
-            <span class="meta-value">
-              {selectedNode.requires.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}
-            </span>
-          </div>
-        {/if}
-        {#if selectedNode.requiresAny && selectedNode.requiresAny.length > 0}
-          <div class="meta-row">
-            <span class="meta-label">Requires (any):</span>
-            <span class="meta-value">
-              {selectedNode.requiresAny.map((r) => getResearchNodeDef(r)?.name ?? r).join(" or ")}
-            </span>
-          </div>
-        {/if}
-        {#if selectedNode.exclusive && selectedNode.exclusive.length > 0}
-          <div class="meta-row">
-            <span class="meta-label">Exclusive with:</span>
-            <span class="meta-value text-warning">
-              {selectedNode.exclusive.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}
-            </span>
-          </div>
-        {/if}
-        {#if selectedNode.archetypeRequired}
-          <div class="meta-row">
-            <span class="meta-label">Archetype:</span>
-            <span class="meta-value">{selectedNode.archetypeRequired}</span>
-          </div>
-        {/if}
-      </div>
-
-      {#if status === "available" && !activeResearch}
-        <button
-          class="start-btn"
-          disabled={!canAfford(selectedNode)}
-          onclick={onStartResearch}
+      <!-- Inline Detail Panel (positioned below clicked node) -->
+      {#if selectedNode}
+        {@const status = nodeStatus(selectedNode)}
+        <!-- svelte-ignore a11y_no_static_element_interactions a11y_click_events_have_key_events -->
+        <div
+          class="detail-panel"
+          style="left: {detailX}px; top: {detailY}px;"
+          onclick={(e) => e.stopPropagation()}
         >
-          {canAfford(selectedNode) ? "Start Research" : "Not enough IP"}
-        </button>
-      {:else if status === "available" && activeResearch}
-        <p class="detail-hint text-muted">Finish current research first.</p>
-      {:else if status === "completed"}
-        <p class="detail-hint text-rp">Research complete!</p>
-      {:else if status === "active"}
-        <p class="detail-hint">Currently researching... {(researchProgress * 100).toFixed(1)}%</p>
-      {:else}
-        <p class="detail-hint text-muted">Prerequisites not met.</p>
+          <div class="dp-arrow" style="left: {nodeCenterX(selectedNode) - detailX - 6}px;"></div>
+          <div class="dp-header">
+            <h3 class="dp-name">{selectedNode.name}</h3>
+            <button class="dp-close" onclick={() => selectedNode = null}>&times;</button>
+          </div>
+          <p class="dp-flavor">"{selectedNode.flavorText}"</p>
+
+          <div class="dp-grid">
+            <span class="dp-label">Effects</span>
+            <span class="dp-val">{effectSummary(selectedNode)}</span>
+            <span class="dp-label">Cost</span>
+            <span class="dp-val mono">{formatNumber(new Decimal(selectedNode.ipCost), notation)} IP</span>
+            <span class="dp-label">Time</span>
+            <span class="dp-val">{estimatedTime(selectedNode)}</span>
+            <span class="dp-label">Prestige</span>
+            <span class="dp-val">{selectedNode.persistsOnPrestige ? "Permanent" : "Resets each run"}</span>
+            {#if selectedNode.requires.length > 0}
+              <span class="dp-label">Requires</span>
+              <span class="dp-val">{selectedNode.requires.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}</span>
+            {/if}
+            {#if selectedNode.requiresAny && selectedNode.requiresAny.length > 0}
+              <span class="dp-label">Requires (any)</span>
+              <span class="dp-val">{selectedNode.requiresAny.map((r) => getResearchNodeDef(r)?.name ?? r).join(" or ")}</span>
+            {/if}
+            {#if selectedNode.exclusive && selectedNode.exclusive.length > 0}
+              <span class="dp-label">Exclusive with</span>
+              <span class="dp-val dp-warning">{selectedNode.exclusive.map((r) => getResearchNodeDef(r)?.name ?? r).join(", ")}</span>
+            {/if}
+          </div>
+
+          {#if status === "available" && !activeResearch}
+            <button class="dp-start" disabled={!canAfford(selectedNode)} onclick={onStartResearch}>
+              {canAfford(selectedNode) ? "Start Research" : "Not enough IP"}
+            </button>
+          {:else if status === "available" && activeResearch}
+            <p class="dp-hint text-muted">Finish current research first.</p>
+          {:else if status === "completed"}
+            <p class="dp-hint dp-done">Research complete</p>
+          {:else if status === "active"}
+            <div class="dp-active-bar">
+              <div class="dp-active-fill" style="width: {researchProgress * 100}%"></div>
+            </div>
+            <p class="dp-hint">Researching... {(researchProgress * 100).toFixed(1)}%</p>
+          {:else}
+            <p class="dp-hint text-muted">Prerequisites not met.</p>
+          {/if}
+        </div>
       {/if}
     </div>
-  {/if}
+  </div>
 
   <!-- Lab Expansion Section -->
   <div class="lab-section">
@@ -431,7 +462,7 @@
             class="lab-expand-btn"
             class:primary={canExpandLab}
             disabled={!canExpandLab}
-            onclick={onExpandLab}
+            onclick={() => doLabExpansion()}
           >
             <span class="lab-expand-cost mono">{formatNumber(nextLabDef.ipCost, notation)} IP</span>
             <span class="lab-expand-label">Expand</span>
@@ -444,7 +475,7 @@
         </div>
       </div>
     {:else if state.labLevel >= MAX_LAB_LEVEL}
-      <p class="lab-maxed text-muted">Maximum lab expansion reached. The sky is no longer the limit.</p>
+      <p class="lab-maxed text-muted">Maximum lab expansion reached.</p>
     {/if}
   </div>
 </div>
@@ -456,127 +487,178 @@
     padding: var(--space-md) var(--space-lg);
   }
 
-  /* IP Header */
+  /* ── IP Header ─────────────────────────────────────────────────── */
+
   .ip-header {
     display: flex;
     justify-content: center;
-    gap: var(--space-xl);
-    margin-bottom: var(--space-lg);
-    padding: var(--space-md) var(--space-lg);
-    border: 1px solid var(--border-color);
+    align-items: center;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm) var(--space-xl);
+    border: 1px solid rgba(255, 203, 107, 0.15);
     border-radius: var(--radius-md);
-    background: rgba(26, 29, 39, 0.75);
-    backdrop-filter: blur(4px);
+    background: linear-gradient(135deg, rgba(26, 29, 39, 0.85), rgba(40, 35, 50, 0.85));
+    backdrop-filter: blur(6px);
   }
 
-  .ip-display, .ip-rate {
+  .ip-col {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 2px;
   }
 
-  .ip-label {
-    font-size: var(--text-xs);
+  .ip-tiny {
+    font-size: 9px;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
   }
 
   .ip-value {
     font-size: var(--text-xl);
     font-weight: 700;
     color: #ffcb6b;
+    text-shadow: 0 0 12px rgba(255, 203, 107, 0.3);
   }
 
   .ip-rate-value {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
     color: #ffcb6b;
-    opacity: 0.8;
+    opacity: 0.75;
   }
 
-  /* Active Research */
+  .ip-count {
+    font-size: var(--text-base);
+    color: #82aaff;
+  }
+
+  .ip-total {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+  }
+
+  .ip-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* ── Active Research ────────────────────────────────────────────── */
+
   .active-research {
-    margin-bottom: var(--space-lg);
-    padding: var(--space-md);
-    border-color: #ffcb6b;
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid rgba(255, 203, 107, 0.25);
+    border-radius: var(--radius-md);
+    background: rgba(255, 203, 107, 0.04);
   }
 
-  .active-header {
+  .active-top {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    flex-wrap: wrap;
+    margin-bottom: 6px;
   }
 
-  .active-label {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-    text-transform: uppercase;
+  .active-icon {
+    font-size: 14px;
+    animation: spin 3s linear infinite;
+    color: #ffcb6b;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .active-name {
     font-weight: 600;
+    font-size: var(--text-sm);
     color: #ffcb6b;
     flex: 1;
   }
 
+  .active-pct {
+    font-size: var(--text-sm);
+    color: #ffcb6b;
+    font-weight: 700;
+  }
+
   .cancel-btn {
-    font-size: var(--text-xs);
-    padding: 2px var(--space-sm);
-    border-color: var(--color-danger);
+    font-size: 10px;
+    padding: 2px 8px;
+    border: 1px solid rgba(255, 83, 112, 0.4);
+    border-radius: var(--radius-sm);
+    background: transparent;
     color: var(--color-danger);
+    cursor: pointer;
   }
 
-  .cancel-btn:hover:not(:disabled) {
-    background: rgba(255, 83, 112, 0.15);
+  .cancel-btn:hover {
+    background: rgba(255, 83, 112, 0.1);
   }
 
-  .progress-bar-container {
-    height: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
+  .progress-track {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
     overflow: hidden;
-    margin-bottom: var(--space-xs);
+    margin-bottom: 4px;
   }
 
-  .progress-bar {
+  .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #ffcb6b, #f0a030);
-    border-radius: 3px;
+    border-radius: 2px;
     transition: width 0.3s linear;
+    box-shadow: 0 0 8px rgba(255, 203, 107, 0.4);
   }
 
-  .active-footer {
-    font-size: var(--text-xs);
-    text-align: center;
+  .active-bottom {
+    font-size: 10px;
+    text-align: right;
   }
 
-  /* Corkboard Header */
+  /* ── Corkboard Header ──────────────────────────────────────────── */
+
   .corkboard-header {
     text-align: center;
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
   }
 
   .corkboard-title {
     font-size: var(--text-lg);
     font-weight: 700;
     color: #ffcb6b;
+    text-shadow: 0 0 20px rgba(255, 203, 107, 0.15);
   }
 
-  .corkboard-desc {
-    font-size: var(--text-sm);
+  .corkboard-sub {
+    font-size: 11px;
   }
 
-  /* ── Tree Viewport ──────────────────────────────────────────────── */
+  /* ── Tree Viewport ─────────────────────────────────────────────── */
 
   .tree-viewport {
     position: relative;
     overflow: auto;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 203, 107, 0.1);
     border-radius: var(--radius-md);
-    background: rgba(10, 12, 20, 0.8);
-    height: 520px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(199, 146, 234, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 70% 80%, rgba(130, 170, 255, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255, 203, 107, 0.02) 0%, transparent 60%),
+      rgba(8, 10, 18, 0.92);
+    background-image:
+      radial-gradient(circle at 30% 20%, rgba(199, 146, 234, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 70% 80%, rgba(130, 170, 255, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255, 203, 107, 0.02) 0%, transparent 60%),
+      radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      radial-gradient(rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px, 24px 24px;
+    background-position: 0 0, 0 0, 0 0, 0 0, 12px 12px;
+    height: 560px;
     cursor: grab;
     user-select: none;
   }
@@ -597,133 +679,205 @@
     pointer-events: none;
   }
 
-  /* Connection lines */
-  .conn-line {
+  /* ── Connection Lines ──────────────────────────────────────────── */
+
+  .conn {
     stroke-width: 2;
-    opacity: 0.4;
   }
 
-  .conn-line.completed {
-    stroke: #82aaff;
-    opacity: 0.7;
+  .conn.completed {
+    stroke-width: 2.5;
+    opacity: 0.65;
   }
 
-  .conn-line.available {
-    stroke: #ffcb6b;
-    opacity: 0.5;
+  .conn.available {
+    stroke-width: 2;
+    opacity: 0.6;
+    stroke-dasharray: 6 3;
+    animation: dash-flow 1.5s linear infinite;
   }
 
-  .conn-line.locked {
-    stroke: var(--text-muted);
-    opacity: 0.2;
+  @keyframes dash-flow {
+    to { stroke-dashoffset: -18; }
   }
 
-  /* Tier labels */
-  .tier-label {
+  .conn.locked {
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 1;
+    stroke-dasharray: 4 6;
+  }
+
+  /* ── Tier Labels ───────────────────────────────────────────────── */
+
+  .tier-tag {
     position: absolute;
-    font-size: 10px;
-    font-weight: 600;
-    color: rgba(255, 203, 107, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
+    left: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     pointer-events: none;
+    z-index: 2;
   }
 
-  /* ── Tree Node Cards ────────────────────────────────────────────── */
+  .tier-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255, 203, 107, 0.5);
+    background: rgba(255, 203, 107, 0.06);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .tier-text {
+    font-size: 9px;
+    color: rgba(255, 203, 107, 0.25);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Tree Node Cards ───────────────────────────────────────────── */
 
   .tree-node {
     position: absolute;
-    padding: 6px 8px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: rgba(26, 29, 39, 0.9);
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(20, 22, 32, 0.92);
     cursor: pointer;
-    transition: all 150ms ease;
+    transition: all 180ms ease;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    font-size: 11px;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
   .tree-node:hover {
-    border-color: rgba(255, 203, 107, 0.5);
+    border-color: rgba(var(--node-glow), 0.5);
+    box-shadow: 0 2px 16px rgba(var(--node-glow), 0.15);
     z-index: 5;
-    transform: scale(1.04);
+    transform: translateY(-2px);
   }
 
   .tree-node.selected {
-    border-color: #ffcb6b;
-    box-shadow: 0 0 12px rgba(255, 203, 107, 0.3);
+    border-color: rgba(var(--node-glow), 0.7);
+    box-shadow: 0 0 20px rgba(var(--node-glow), 0.25);
     z-index: 10;
+    transform: translateY(-2px);
   }
 
   .tree-node.locked {
-    opacity: 0.4;
+    opacity: 0.35;
+  }
+
+  .tree-node.locked:hover {
+    opacity: 0.5;
   }
 
   .tree-node.completed {
-    border-color: rgba(130, 170, 255, 0.5);
-    background: rgba(130, 170, 255, 0.08);
+    border-color: rgba(130, 170, 255, 0.3);
   }
 
   .tree-node.active {
-    border-color: #ffcb6b;
-    background: rgba(255, 203, 107, 0.1);
-    animation: node-pulse 2s ease-in-out infinite;
+    border-color: rgba(255, 203, 107, 0.5);
+    animation: node-pulse 2.5s ease-in-out infinite;
   }
 
   .tree-node.available {
-    border-color: rgba(255, 203, 107, 0.35);
+    border-color: rgba(255, 203, 107, 0.2);
   }
 
   .tree-node.archetype-node {
-    border-left: 3px solid rgba(199, 146, 234, 0.6);
+    border-left: 3px solid rgba(199, 146, 234, 0.5);
   }
 
   @keyframes node-pulse {
-    0%, 100% { box-shadow: 0 0 6px rgba(255, 203, 107, 0.1); }
-    50% { box-shadow: 0 0 14px rgba(255, 203, 107, 0.35); }
+    0%, 100% { box-shadow: 0 2px 8px rgba(255, 203, 107, 0.1); }
+    50% { box-shadow: 0 2px 20px rgba(255, 203, 107, 0.3); }
   }
 
-  .node-name {
-    font-weight: 600;
-    font-size: 11px;
-    line-height: 1.2;
-    display: flex;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .badge {
-    font-size: 8px;
-    padding: 0 4px;
-    border-radius: 6px;
-    font-weight: 700;
-    text-transform: uppercase;
-    white-space: nowrap;
+  /* Top color bar on each card */
+  .node-top-bar {
+    height: 3px;
+    width: 100%;
     flex-shrink: 0;
   }
 
-  .badge.done {
-    background: rgba(130, 170, 255, 0.25);
+  .node-top-bar.completed {
+    background: linear-gradient(90deg, #82aaff, #6a8fdb);
+  }
+
+  .node-top-bar.active {
+    background: linear-gradient(90deg, #ffcb6b, #f0a030);
+    animation: bar-shimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes bar-shimmer {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  .node-top-bar.available {
+    background: linear-gradient(90deg, rgba(255, 203, 107, 0.4), rgba(255, 203, 107, 0.15));
+  }
+
+  .node-top-bar.locked {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .node-title {
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1.25;
+    padding: 6px 8px 2px;
+    color: var(--text-primary);
+  }
+
+  .node-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 0 8px;
+  }
+
+  .nbadge {
+    font-size: 8px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .nbadge.done {
+    background: rgba(130, 170, 255, 0.15);
     color: #82aaff;
   }
 
-  .badge.active {
-    background: rgba(255, 203, 107, 0.25);
+  .nbadge.researching {
+    background: rgba(255, 203, 107, 0.15);
     color: #ffcb6b;
   }
 
-  .badge.perm {
-    background: rgba(195, 232, 141, 0.15);
+  .nbadge.perm {
+    background: rgba(195, 232, 141, 0.1);
     color: #c3e88d;
   }
 
-  .node-effects {
+  .nbadge.choice {
+    background: rgba(255, 180, 80, 0.12);
+    color: #ffb450;
+  }
+
+  .nbadge.arch {
+    background: rgba(199, 146, 234, 0.12);
+    color: #c792ea;
+  }
+
+  .node-effect {
     font-size: 9px;
-    line-height: 1.2;
+    line-height: 1.25;
+    color: var(--text-muted);
+    padding: 3px 8px 0;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -734,6 +888,7 @@
   .node-cost {
     font-size: 9px;
     color: var(--text-muted);
+    padding: 3px 8px 6px;
     margin-top: auto;
   }
 
@@ -742,127 +897,151 @@
     font-weight: 600;
   }
 
-  .node-exclusive {
-    font-size: 8px;
-    color: var(--color-warning);
-    font-weight: 600;
+  /* ── Detail Panel (inline below node) ──────────────────────────── */
+
+  .detail-panel {
+    position: absolute;
+    width: 340px;
+    z-index: 100;
+    padding: var(--space-md);
+    border: 1px solid rgba(255, 203, 107, 0.3);
+    border-radius: 10px;
+    background: rgba(16, 18, 28, 0.97);
+    backdrop-filter: blur(16px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 20px rgba(255, 203, 107, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    animation: dp-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* ── Detail Overlay ─────────────────────────────────────────────── */
-
-  .detail-overlay {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    padding: var(--space-md) var(--space-lg);
-    border-color: #ffcb6b;
-    background: rgba(26, 29, 39, 0.97);
-    backdrop-filter: blur(12px);
-    animation: detail-slide-up 200ms ease;
-    margin-top: var(--space-sm);
+  @keyframes dp-pop {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  @keyframes detail-slide-up {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* Arrow pointing up to the node */
+  .dp-arrow {
+    position: absolute;
+    top: -6px;
+    width: 12px;
+    height: 12px;
+    background: rgba(16, 18, 28, 0.97);
+    border-top: 1px solid rgba(255, 203, 107, 0.3);
+    border-left: 1px solid rgba(255, 203, 107, 0.3);
+    transform: rotate(45deg);
   }
 
-  .detail-header {
+  .dp-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: var(--space-sm);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xs);
   }
 
-  .detail-name {
-    font-size: var(--text-base);
+  .dp-name {
+    font-size: var(--text-sm);
     font-weight: 700;
     color: #ffcb6b;
+    line-height: 1.3;
   }
 
-  .detail-close {
-    font-size: var(--text-sm);
-    padding: 2px 8px;
-    border: 1px solid var(--border-color);
+  .dp-close {
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+    border: none;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    border-radius: var(--radius-sm);
-  }
-
-  .detail-close:hover {
-    color: var(--text-primary);
-  }
-
-  .detail-flavor {
-    font-style: italic;
-    color: var(--text-secondary);
-    font-size: var(--text-sm);
-    margin-bottom: var(--space-sm);
-  }
-
-  .detail-desc {
-    font-size: var(--text-sm);
-    margin-bottom: var(--space-md);
-  }
-
-  .detail-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: var(--space-md);
-  }
-
-  .meta-row {
-    display: flex;
-    gap: var(--space-sm);
-    font-size: var(--text-xs);
-  }
-
-  .meta-label {
-    color: var(--text-muted);
-    min-width: 110px;
     flex-shrink: 0;
   }
 
-  .meta-value {
+  .dp-close:hover {
+    color: var(--text-primary);
+  }
+
+  .dp-flavor {
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.4;
+    margin-bottom: var(--space-sm);
+    opacity: 0.7;
+  }
+
+  .dp-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px var(--space-sm);
+    font-size: 11px;
+    margin-bottom: var(--space-md);
+  }
+
+  .dp-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .dp-val {
     color: var(--text-secondary);
   }
 
-  .text-warning {
+  .dp-warning {
     color: var(--color-warning);
   }
 
-  .text-rp {
-    color: var(--color-rp);
-  }
-
-  .start-btn {
+  .dp-start {
     width: 100%;
-    padding: var(--space-sm) var(--space-md);
+    padding: 8px var(--space-md);
     font-weight: 700;
-    border-color: #ffcb6b;
-    color: #ffcb6b;
-    transition: all var(--transition-fast);
-  }
-
-  .start-btn:hover:not(:disabled) {
-    background: rgba(255, 203, 107, 0.15);
-    box-shadow: 0 0 20px rgba(255, 203, 107, 0.2);
-  }
-
-  .start-btn:disabled {
-    opacity: 0.4;
-  }
-
-  .detail-hint {
     font-size: var(--text-sm);
+    border: 1px solid rgba(255, 203, 107, 0.4);
+    border-radius: 6px;
+    background: rgba(255, 203, 107, 0.08);
+    color: #ffcb6b;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .dp-start:hover:not(:disabled) {
+    background: rgba(255, 203, 107, 0.18);
+    box-shadow: 0 0 16px rgba(255, 203, 107, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .dp-start:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .dp-hint {
+    font-size: 11px;
     text-align: center;
   }
 
-  /* ── Lab Expansion Section ──────────────────────────────────────── */
+  .dp-done {
+    color: #82aaff;
+    font-weight: 600;
+  }
+
+  .dp-active-bar {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .dp-active-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffcb6b, #f0a030);
+    border-radius: 2px;
+    transition: width 0.3s linear;
+  }
+
+  /* ── Lab Expansion Section ─────────────────────────────────────── */
 
   .lab-section {
     margin-top: var(--space-xl);
@@ -990,7 +1169,7 @@
     font-style: italic;
   }
 
-  /* ── Mobile ─────────────────────────────────────────────────────── */
+  /* ── Mobile ────────────────────────────────────────────────────── */
 
   @media (max-width: 600px) {
     .research-tab {
@@ -998,21 +1177,16 @@
     }
 
     .ip-header {
-      flex-direction: column;
       gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
     }
 
     .tree-viewport {
-      height: 400px;
+      height: 420px;
     }
 
-    .meta-row {
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .meta-label {
-      min-width: unset;
+    .detail-panel {
+      width: 280px;
     }
 
     .lab-next-header {
