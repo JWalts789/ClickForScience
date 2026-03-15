@@ -90,6 +90,21 @@
     document.addEventListener("pointerup", onDocUp);
   }
 
+  // ── Mouse Wheel Paging ─────────────────────────────────────────────
+  let wheelCooldown = false;
+  function onWheel(e: WheelEvent) {
+    if (expandedNote || wheelCooldown) return;
+    if (Math.abs(e.deltaY) < 10) return;
+    e.preventDefault();
+    wheelCooldown = true;
+    if (e.deltaY > 0 && currentPage < totalPages - 1) {
+      goToPage(currentPage + 1);
+    } else if (e.deltaY < 0 && currentPage > 0) {
+      goToPage(currentPage - 1);
+    }
+    setTimeout(() => { wheelCooldown = false; }, 300);
+  }
+
   function onNoteClick(note: LabNoteDef) {
     if (wasSwiping) return;
     expandedNote = note;
@@ -134,6 +149,7 @@
       role="region"
       aria-label="Journal pages"
       onpointerdown={onPointerDown}
+      onwheel={onWheel}
     >
       <div
         class="swipe-track"
