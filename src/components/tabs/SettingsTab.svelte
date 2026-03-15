@@ -109,6 +109,21 @@
     </div>
   </div>
 
+  <div class="setting-group support-section">
+    <h3>Support CandleSmoke Games</h3>
+    <p class="support-text text-muted">
+      Click, For Science! is free to play. If you're enjoying it, consider buying us a coffee!
+    </p>
+    <a
+      href="https://buymeacoffee.com/candlesmokedev"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="coffee-btn"
+    >
+      <span class="coffee-icon">☕</span> Buy Me a Coffee
+    </a>
+  </div>
+
   <div class="setting-group danger-zone">
     <h3>Danger Zone</h3>
     <button class="danger" onclick={() => {
@@ -202,6 +217,44 @@
     font-size: var(--text-sm);
     min-width: 35px;
     text-align: right;
+  }
+
+  /* ── Support Section ──────────────────────────────────────────── */
+
+  .support-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--space-lg);
+  }
+
+  .support-text {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-sm);
+    line-height: 1.5;
+  }
+
+  .coffee-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: #1a1a1a;
+    background: #ffdd00;
+    border: none;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .coffee-btn:hover {
+    background: #ffca00;
+    transform: translateY(-1px);
+  }
+
+  .coffee-icon {
+    font-size: var(--text-base);
   }
 
   .danger-zone {

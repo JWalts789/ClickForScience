@@ -90,6 +90,8 @@
   <span class="footer-info text-muted">
     {#if savedFlash}<span class="saved-indicator">Saved</span>{/if}
     Click, For Science! v0.1.0
+    <span class="footer-sep">·</span>
+    <a href="https://buymeacoffee.com/candlesmokedev" target="_blank" rel="noopener noreferrer" class="coffee-link">☕ Support</a>
   </span>
 </footer>
 
@@ -165,5 +167,22 @@
     15% { opacity: 1; }
     70% { opacity: 1; }
     100% { opacity: 0; }
+  }
+
+  .footer-sep {
+    margin: 0 var(--space-xs);
+    opacity: 0.4;
+  }
+
+  .coffee-link {
+    color: #ffdd00;
+    text-decoration: none;
+    font-size: var(--text-xs);
+    transition: color var(--transition-fast);
+  }
+
+  .coffee-link:hover {
+    color: #ffca00;
+    text-decoration: underline;
   }
 </style>
