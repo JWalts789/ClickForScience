@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { getState, getRevision, toggleAllAutobuyers, setAutobuyerReserve, isResearchComplete } from "../../stores/game.svelte";
   import { GENERATORS } from "../../lib/data/generators.data";
   import ClickButton from "../shared/ClickButton.svelte";
@@ -81,8 +82,10 @@
   }
 
   // ── Mouse Wheel Paging ─────────────────────────────────────────────
+  let viewportEl = $state<HTMLDivElement | undefined>();
   let wheelCooldown = false;
-  function onWheel(e: WheelEvent) {
+
+  function handleWheel(e: WheelEvent) {
     if (wheelCooldown) return;
     if (Math.abs(e.deltaY) < 10) return;
     e.preventDefault();
@@ -94,6 +97,14 @@
     }
     setTimeout(() => { wheelCooldown = false; }, 300);
   }
+
+  onMount(() => {
+    viewportEl?.addEventListener("wheel", handleWheel, { passive: false });
+  });
+
+  onDestroy(() => {
+    viewportEl?.removeEventListener("wheel", handleWheel);
+  });
 
   function onPointerDown(e: PointerEvent) {
     // Don't start drag on buttons/inputs
@@ -149,7 +160,7 @@
     role="region"
     aria-label="Generator pages"
     onpointerdown={onPointerDown}
-    onwheel={onWheel}
+    bind:this={viewportEl}
   >
     <div
       class="swipe-track"

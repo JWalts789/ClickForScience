@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { getState } from "../../stores/game.svelte";
   import { LAB_NOTES, getNoteDef } from "../../lib/data/notes.data";
   import type { LabNoteDef } from "../../lib/data/notes.data";
@@ -91,8 +92,10 @@
   }
 
   // ── Mouse Wheel Paging ─────────────────────────────────────────────
+  let viewportEl = $state<HTMLDivElement | undefined>();
   let wheelCooldown = false;
-  function onWheel(e: WheelEvent) {
+
+  function handleWheel(e: WheelEvent) {
     if (expandedNote || wheelCooldown) return;
     if (Math.abs(e.deltaY) < 10) return;
     e.preventDefault();
@@ -104,6 +107,14 @@
     }
     setTimeout(() => { wheelCooldown = false; }, 300);
   }
+
+  onMount(() => {
+    viewportEl?.addEventListener("wheel", handleWheel, { passive: false });
+  });
+
+  onDestroy(() => {
+    viewportEl?.removeEventListener("wheel", handleWheel);
+  });
 
   function onNoteClick(note: LabNoteDef) {
     if (wasSwiping) return;
@@ -149,7 +160,7 @@
       role="region"
       aria-label="Journal pages"
       onpointerdown={onPointerDown}
-      onwheel={onWheel}
+      bind:this={viewportEl}
     >
       <div
         class="swipe-track"
