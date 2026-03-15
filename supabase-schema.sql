@@ -59,6 +59,12 @@ CREATE INDEX IF NOT EXISTS idx_weekly_category_value
 ALTER TABLE leaderboard ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leaderboard_weekly ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if re-running
+DROP POLICY IF EXISTS "Public read access" ON leaderboard;
+DROP POLICY IF EXISTS "Public read access" ON leaderboard_weekly;
+DROP POLICY IF EXISTS "Service role write" ON leaderboard;
+DROP POLICY IF EXISTS "Service role write" ON leaderboard_weekly;
+
 -- Public read access (anon key can query)
 CREATE POLICY "Public read access" ON leaderboard
   FOR SELECT USING (true);
