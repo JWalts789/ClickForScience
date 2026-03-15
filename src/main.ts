@@ -1,6 +1,11 @@
 import { mount } from "svelte";
+import { inject } from "@vercel/analytics";
 import "./styles/global.css";
 import App from "./App.svelte";
+
+// Vercel Web Analytics — tracks page views, unique visitors, referrers.
+// Only active on Vercel deployments; no-ops locally.
+inject();
 
 try {
   const app = mount(App, {
