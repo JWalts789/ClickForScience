@@ -136,3 +136,43 @@ export async function submitScore(
 export function isLeaderboardAvailable(): boolean {
   return !!supabase;
 }
+
+// ── Realtime Subscription ─────────────────────────────────────────
+// Subscribe to INSERT/UPDATE on a leaderboard table+category.
+// Calls `onChange` whenever any player's score changes.
+
+export function subscribeToLeaderboard(
+  category: LeaderboardCategory,
+  timeframe: LeaderboardTimeframe,
+  onChange: () => void
+): () => void {
+  if (!supabase) return () => {};
+
+  const tableName = timeframe === "weekly" ? "leaderboard_weekly" : "leaderboard";
+
+  const channel = supabase
+    .channel(`lb_${tableName}_${category}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: tableName,
+        filter: `category=eq.${category}`,
+      },
+      () => {
+        onChange();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase!.removeChannel(channel);
+  };
+}
+
+// ── Supabase client accessor (for realtime in other modules) ──────
+
+export function getSupabaseClient() {
+  return supabase;
+}

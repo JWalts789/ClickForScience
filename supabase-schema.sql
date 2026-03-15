@@ -90,3 +90,9 @@ BEGIN
   TRUNCATE leaderboard_weekly;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ── Enable Realtime ─────────────────────────────────────────────
+-- Required for live leaderboard updates via Supabase Realtime.
+
+ALTER PUBLICATION supabase_realtime ADD TABLE leaderboard;
+ALTER PUBLICATION supabase_realtime ADD TABLE leaderboard_weekly;

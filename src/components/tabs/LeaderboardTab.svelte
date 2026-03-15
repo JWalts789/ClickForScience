@@ -1,7 +1,13 @@
 <script lang="ts">
+  import { onDestroy } from "svelte";
   import { getState, getRevision } from "../../stores/game.svelte";
   import { hasPlayerName, getPlayerName, getPlayerId } from "../../lib/leaderboard/identity";
-  import { fetchLeaderboard, submitScore, isLeaderboardAvailable } from "../../lib/leaderboard/client";
+  import {
+    fetchLeaderboard,
+    submitScore,
+    isLeaderboardAvailable,
+    subscribeToLeaderboard,
+  } from "../../lib/leaderboard/client";
   import {
     LEADERBOARD_CATEGORIES,
     type LeaderboardCategory,
@@ -28,21 +34,63 @@
   let lastError = $state("");
   let lastSuccess = $state("");
   let lastFetchKey = $state("");
+  let isLive = $state(false);
 
   const playerId = getPlayerId();
   const notation = $derived(state.settings.notation);
 
-  // Auto-fetch when category or timeframe changes
+  // ── Realtime subscription ─────────────────────────────────────────
+  let unsubRealtime: (() => void) | null = null;
+
+  // Polling fallback — refresh every 30s as a safety net
+  const POLL_INTERVAL_MS = 30_000;
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  // Auto-submit every 2 minutes so scores stay fresh
+  const AUTO_SUBMIT_INTERVAL_MS = 120_000;
+  let autoSubmitTimer: ReturnType<typeof setInterval> | null = null;
+
+  function setupRealtimeAndPolling(cat: LeaderboardCategory, tf: LeaderboardTimeframe) {
+    // Clean up previous subscription and timers
+    unsubRealtime?.();
+    if (pollTimer) clearInterval(pollTimer);
+    if (autoSubmitTimer) clearInterval(autoSubmitTimer);
+
+    // Subscribe to realtime changes
+    if (available) {
+      unsubRealtime = subscribeToLeaderboard(cat, tf, () => {
+        isLive = true;
+        doFetch();
+      });
+
+      // Polling fallback
+      pollTimer = setInterval(() => doFetch(), POLL_INTERVAL_MS);
+
+      // Auto-submit scores if player has a name
+      autoSubmitTimer = setInterval(() => {
+        if (hasPlayerName()) doAutoSubmit();
+      }, AUTO_SUBMIT_INTERVAL_MS);
+    }
+  }
+
+  onDestroy(() => {
+    unsubRealtime?.();
+    if (pollTimer) clearInterval(pollTimer);
+    if (autoSubmitTimer) clearInterval(autoSubmitTimer);
+  });
+
+  // Re-setup when category or timeframe changes
   $effect(() => {
     const key = `${activeCategory}:${activeTimeframe}`;
     if (key !== lastFetchKey && available) {
       lastFetchKey = key;
+      setupRealtimeAndPolling(activeCategory, activeTimeframe);
       doFetch();
     }
   });
 
   async function doFetch() {
-    loading = true;
+    loading = entries.length === 0; // Only show loading spinner on first fetch
     lastError = "";
     try {
       const result = await fetchLeaderboard(activeCategory, activeTimeframe);
@@ -53,6 +101,21 @@
       lastError = "Failed to load leaderboard.";
     }
     loading = false;
+  }
+
+  /** Silently submit current category score in the background. */
+  async function doAutoSubmit() {
+    const pv = getPlayerValue(activeCategory);
+    if (pv.value <= 0 || !isFinite(pv.value)) return;
+    await submitScore(
+      activeCategory,
+      pv.value,
+      pv.mantissa,
+      pv.exponent,
+      state.madness.dominantArchetype,
+      state.totalPlaytimeSec,
+      state.prestigeCount
+    );
   }
 
   function getPlayerValue(cat: LeaderboardCategory): { value: number; mantissa: number; exponent: number } {
@@ -182,7 +245,7 @@
 
 <div class="leaderboard-tab">
   <div class="lb-header">
-    <h2>Leaderboards</h2>
+    <h2>Leaderboards {#if isLive}<span class="live-dot" title="Live — updates in real time"></span>{/if}</h2>
     {#if hasPlayerName()}
       <span class="player-name mono">{getPlayerName()}</span>
     {/if}
@@ -323,6 +386,24 @@
   .lb-header h2 {
     font-size: var(--text-lg);
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #50c878;
+    box-shadow: 0 0 6px rgba(80, 200, 120, 0.6);
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(80, 200, 120, 0.6); }
+    50% { opacity: 0.5; box-shadow: 0 0 2px rgba(80, 200, 120, 0.3); }
   }
 
   .player-name {
