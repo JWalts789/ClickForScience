@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import { getState } from "../../stores/game.svelte";
   import { isUpgradeAvailable } from "../../lib/engine/actions";
   import { UPGRADES, type UpgradeCategory } from "../../lib/data/upgrades.data";
   import UpgradeRow from "../shared/UpgradeRow.svelte";
 
   const PAGE_SIZE = 7;
+  const SWIPE_THRESHOLD = 50;
 
   const state = $derived(getState());
 
@@ -66,6 +68,63 @@
   function nextPage() {
     if (safePage < totalPages - 1) pageIndex = safePage + 1;
   }
+
+  // ── Swipe / Drag Handling ───────────────────────────────────────────
+
+  let dragStartX = $state(0);
+  let dragCurrentX = $state(0);
+  let isDragging = $state(false);
+
+  function onDocMove(e: PointerEvent) {
+    if (!isDragging) return;
+    dragCurrentX = e.clientX;
+  }
+
+  function onDocUp() {
+    if (!isDragging) return;
+    const delta = dragCurrentX - dragStartX;
+    if (delta < -SWIPE_THRESHOLD) nextPage();
+    else if (delta > SWIPE_THRESHOLD) prevPage();
+    isDragging = false;
+    document.removeEventListener("pointermove", onDocMove);
+    document.removeEventListener("pointerup", onDocUp);
+  }
+
+  function onPointerDown(e: PointerEvent) {
+    const target = e.target as HTMLElement;
+    if (target.closest("button, input")) return;
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragCurrentX = e.clientX;
+    document.addEventListener("pointermove", onDocMove);
+    document.addEventListener("pointerup", onDocUp);
+  }
+
+  // ── Mouse Wheel Paging ─────────────────────────────────────────────
+
+  let listEl = $state<HTMLDivElement | undefined>();
+  let wheelCooldown = false;
+
+  function handleWheel(e: WheelEvent) {
+    if (totalPages <= 1) return;
+    if (wheelCooldown) return;
+    if (Math.abs(e.deltaY) < 10) return;
+    e.preventDefault();
+    wheelCooldown = true;
+    if (e.deltaY > 0) nextPage();
+    else prevPage();
+    setTimeout(() => { wheelCooldown = false; }, 300);
+  }
+
+  onMount(() => {
+    listEl?.addEventListener("wheel", handleWheel, { passive: false });
+  });
+
+  onDestroy(() => {
+    listEl?.removeEventListener("wheel", handleWheel);
+    document.removeEventListener("pointermove", onDocMove);
+    document.removeEventListener("pointerup", onDocUp);
+  });
 </script>
 
 <div class="upgrades-tab">
@@ -95,8 +154,13 @@
       {/each}
     </div>
 
-    <!-- Upgrade list (paginated) -->
-    <div class="upgrade-list">
+    <!-- Upgrade list (paginated, swipeable + scrollwheel) -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="upgrade-list"
+      bind:this={listEl}
+      onpointerdown={onPointerDown}
+    >
       {#each pageItems as upgrade (upgrade.id)}
         <UpgradeRow {upgrade} />
       {/each}
