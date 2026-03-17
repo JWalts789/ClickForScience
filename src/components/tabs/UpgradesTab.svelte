@@ -66,13 +66,20 @@
     Math.max(0, activeCats.findIndex((c) => c.id === effectiveCat))
   );
 
+  /** Count pages for a given category */
+  function pagesForCat(catId: UpgradeCategory): number {
+    const count = visibleUpgrades.filter((u) => u.category === catId).length;
+    return Math.max(1, Math.ceil(count / PAGE_SIZE));
+  }
+
   function prevPage() {
     if (safePage > 0) {
       pageIndex = safePage - 1;
     } else if (catIndex > 0) {
       // First page of category — go to previous category's last page
-      selectedCat = activeCats[catIndex - 1].id;
-      pageIndex = 9999; // will be clamped to last page by safePage
+      const prevCat = activeCats[catIndex - 1];
+      pageIndex = pagesForCat(prevCat.id) - 1;
+      selectedCat = prevCat.id;
     }
   }
 
@@ -81,8 +88,8 @@
       pageIndex = safePage + 1;
     } else if (catIndex < activeCats.length - 1) {
       // Last page of category — go to next category's first page
-      selectedCat = activeCats[catIndex + 1].id;
       pageIndex = 0;
+      selectedCat = activeCats[catIndex + 1].id;
     }
   }
 
