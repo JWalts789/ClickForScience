@@ -247,4 +247,15 @@
     color: var(--text-secondary);
     line-height: 1.6;
   }
+
+  @media (max-width: 600px) {
+    .offline-popup {
+      max-width: calc(100vw - 32px);
+      padding: var(--space-md);
+    }
+
+    .offline-popup h3 {
+      font-size: var(--text-base);
+    }
+  }
 </style>

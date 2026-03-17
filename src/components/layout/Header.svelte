@@ -309,21 +309,45 @@
   }
 
   @media (max-width: 600px) {
+    .header {
+      padding: var(--space-xs) var(--space-sm);
+    }
+
     .title-row {
-      flex-direction: column;
-      gap: var(--space-xs);
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-xs);
     }
 
     .title-left {
-      flex-direction: column;
-      gap: var(--space-xs);
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-wrap: nowrap;
+      min-width: 0;
+    }
+
+    .title {
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+
+    .subtitle {
+      display: none;
+    }
+
+    .lab-badge {
+      font-size: 0.65rem;
+      padding: 0 3px;
     }
 
     .archetype-tracker {
       flex-direction: row;
-      flex-wrap: wrap;
-      gap: var(--space-xs);
+      flex-wrap: nowrap;
+      gap: 3px;
       min-width: auto;
+      flex-shrink: 0;
     }
 
     .arch-pip {
@@ -331,12 +355,30 @@
     }
 
     .arch-bar-bg {
-      width: 32px;
+      width: 24px;
+    }
+
+    .arch-icon {
+      font-size: 0.6rem;
+      width: 12px;
     }
 
     .resource-bar {
-      gap: var(--space-md);
-      flex-wrap: wrap;
+      gap: var(--space-sm);
+      flex-wrap: nowrap;
+    }
+
+    .resource-label {
+      font-size: 0.6rem;
+    }
+
+    .resource-value {
+      font-size: var(--text-sm);
+    }
+
+    .buff-pill {
+      font-size: 0.65rem;
+      padding: 1px var(--space-xs);
     }
   }
 </style>

@@ -94,28 +94,42 @@
 </script>
 
 <nav class="tab-bar">
-  {#each visibleTabs as tab}
-    <button
-      class="tab"
-      class:active={activeTab === tab.id}
-      onclick={() => onTabClick(tab.id)}
-    >
-      {tab.label}
-      {#if hasBadge(tab.id) && activeTab !== tab.id}
-        <span class="badge"></span>
-      {/if}
-    </button>
-  {/each}
+  <div class="tab-scroll">
+    {#each visibleTabs as tab}
+      <button
+        class="tab"
+        class:active={activeTab === tab.id}
+        onclick={() => onTabClick(tab.id)}
+      >
+        {tab.label}
+        {#if hasBadge(tab.id) && activeTab !== tab.id}
+          <span class="badge"></span>
+        {/if}
+      </button>
+    {/each}
+  </div>
 </nav>
 
 <style>
   .tab-bar {
-    display: flex;
-    gap: 2px;
     background: rgba(26, 29, 39, 0.75);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--border-color);
+    position: relative;
+  }
+
+  .tab-scroll {
+    display: flex;
+    gap: 2px;
     padding: 0 var(--space-lg);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   .tab {
@@ -128,6 +142,8 @@
     color: var(--text-secondary);
     font-size: var(--text-sm);
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: color var(--transition-fast), border-color var(--transition-fast);
   }
 
@@ -155,5 +171,39 @@
   @keyframes badge-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
+  }
+
+  /* Mobile: scroll hints with fade edges */
+  @media (max-width: 600px) {
+    .tab-bar::before,
+    .tab-bar::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 24px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tab-bar::before {
+      left: 0;
+      background: linear-gradient(to right, rgba(26, 29, 39, 0.9), transparent);
+    }
+
+    .tab-bar::after {
+      right: 0;
+      background: linear-gradient(to left, rgba(26, 29, 39, 0.9), transparent);
+    }
+
+    .tab-scroll {
+      padding: 0 var(--space-sm);
+    }
+
+    .tab {
+      min-height: 44px;
+      padding: var(--space-sm) 12px;
+      font-size: var(--text-xs);
+    }
   }
 </style>

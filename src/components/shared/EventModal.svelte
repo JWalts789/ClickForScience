@@ -131,4 +131,20 @@
       transform: translateY(0);
     }
   }
+
+  @media (max-width: 600px) {
+    .event-modal {
+      max-width: calc(100vw - 32px);
+      padding: var(--space-md);
+    }
+
+    .event-title {
+      font-size: var(--text-base);
+    }
+
+    .event-choice {
+      padding: 12px var(--space-md);
+      min-height: 44px;
+    }
+  }
 </style>

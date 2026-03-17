@@ -74,4 +74,13 @@
       transform: translateX(-50%) translateY(10px);
     }
   }
+
+  @media (max-width: 600px) {
+    .toast {
+      bottom: 80px;
+      max-width: calc(100vw - 32px);
+      font-size: var(--text-xs);
+      padding: var(--space-xs) var(--space-md);
+    }
+  }
 </style>
