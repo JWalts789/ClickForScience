@@ -466,6 +466,9 @@
           <span class="lab-level-badge">Level {currentLabDef.level}</span>
         </div>
         <p class="lab-current-desc text-muted">{currentLabDef.flavorText}</p>
+        {#if currentLabDef.secretFlavorText}
+          <p class="lab-secret-desc text-muted" style="font-style: italic; opacity: 0.7; font-size: var(--text-xs); margin-top: var(--space-xs);">{currentLabDef.secretFlavorText}</p>
+        {/if}
         {#if currentLabDef.effects.length > 0}
           <div class="lab-effects">
             {#each currentLabDef.unlocks as unlock}

@@ -51,6 +51,8 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 50, text: "Your garage is wallpapered in notes. Literally." },
       { count: 100, text: "The paper company has a file with your name on it." },
       { count: 200, text: "You've written more than most novelists. None of it is fiction. Probably." },
+      { count: 250, text: "You found a page stuck behind the workbench. The handwriting isn't yours. Dated 1984." },
+      { count: 500, text: "The old notebooks are arranged in a pattern. It's a message. From someone who sat at this desk before you. It reads: 'GARY. DON'T STOP. — H.V.'" },
     ],
   },
   {
@@ -66,6 +68,9 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 25, text: "The fire department has a truck pre-staged nearby." },
       { count: 50, text: "Everything you touch has solder on it. Everything." },
       { count: 100, text: "You can solder by feel now. Also by smell. Also by taste, but let's not talk about that." },
+      { count: 200, text: "The electrical grid on Elm Street hums at a frequency that doesn't exist in any handbook." },
+      { count: 250, text: "Beneath the workbench, scratched into the wood: a circuit diagram. It's elegant. It's impossible. The wood grain grew around it, like the house wanted to keep it." },
+      { count: 500, text: "You built the circuit from the scratched diagram. It works. It shouldn't. It's a receiver. Something is broadcasting on Elm Street. Something has been broadcasting since 1987." },
     ],
   },
   {
@@ -81,6 +86,9 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 25, text: "The EPA has received an anonymous tip about you." },
       { count: 50, text: "Your lawn spontaneously changed color. You claim it was 'intentional.'" },
       { count: 100, text: "You've invented three new colors. Two of them are angry." },
+      { count: 200, text: "The soil samples from your backyard contain trace elements not found in this zip code. Or this continent." },
+      { count: 250, text: "Mrs. Patterson left a casserole on your porch with a note: 'Try adding compound 7b to the blue solution. Trust me.' How did she know about the blue solution?" },
+      { count: 500, text: "You found Mrs. Patterson's real casserole recipe. It's not a recipe. It's a molecular synthesis protocol with a Department of Defense watermark dated 1963. Project codename: CHRYSALIS." },
     ],
   },
   {
@@ -96,6 +104,9 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 25, text: "The garage temperature exceeds 120°F. Neighbors report 'data center smell.'" },
       { count: 50, text: "The NSA has asked you — politely — to stop pinging them." },
       { count: 100, text: "Your garage has more computing power than most countries." },
+      { count: 200, text: "Deep in the server logs: connection attempts from an IP that resolves to your own address. But from 1987. That's not how IP addresses work." },
+      { count: 250, text: "One of the drives contained a partition you didn't create. The timestamps are from 1987. The user account is 'HVOSS_ADMIN'." },
+      { count: 500, text: "The old partition held a single file: 'CHRYSALIS_FINAL_REPORT.enc'. You can't open it. Yet. But one of your servers is already trying to decrypt it. You didn't ask it to." },
     ],
   },
   {
@@ -111,6 +122,10 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 10, text: "A satellite has detected your prototypes. The Pentagon wants answers." },
       { count: 25, text: "They've started communicating with each other. You didn't program that." },
       { count: 50, text: "One of them filed a patent. You're not sure how." },
+      { count: 100, text: "DARPA sent a polite letter. Then a less polite one. Then a fruit basket, which felt threatening." },
+      { count: 200, text: "Prototype #7 keeps pointing at the same spot in the garage floor. You haven't dug there. Yet." },
+      { count: 250, text: "You dug. Six feet down: a sealed metal box with 'VOSS — IF FOUND, DESTROY' engraved on it. Inside: schematics for a machine that looks exactly like Prototype #1. Dated 1986." },
+      { count: 500, text: "You built the Voss schematic. It's a beacon. The moment you powered it on, Agent Reeves called. Not to threaten you. He said: 'Finally. We've been waiting 39 years for someone to finish Harold's work.'" },
     ],
   },
   {
@@ -125,6 +140,10 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 10, text: "Containment breach reported. Contents: 'unclear.'" },
       { count: 25, text: "The zoning board discovered your underground expansion." },
       { count: 50, text: "You've lost track of which chambers have things in them and which ones ARE things." },
+      { count: 100, text: "Chamber 12 has been reclassified from 'containment' to 'negotiation.' It prefers to be asked." },
+      { count: 200, text: "The oldest chamber isn't yours. The concrete pour dates to 1985. Someone built containment infrastructure under your garage decades before you moved in." },
+      { count: 250, text: "Agent Reeves appeared at your door at 3 AM. Not to arrest you. He handed you a keycard labeled 'SUB-LEVEL 3' and said: 'Harold would've wanted you to have this. Don't go down there until you're ready.'" },
+      { count: 500, text: "Sub-Level 3. It's pristine. Dr. Voss's lab, perfectly preserved. On the desk: a photo of Voss, Mrs. Patterson, and a young Agent Reeves. On the whiteboard, in Voss's handwriting: 'The garage isn't the experiment. The STREET is.'" },
     ],
   },
   {
@@ -139,6 +158,10 @@ export const GENERATORS: GeneratorDef[] = [
       { count: 10, text: "You insist the explosion was 'mini.' Neighbors disagree." },
       { count: 25, text: "CERN called. They want to know where you got those readings." },
       { count: 50, text: "The hum is constant. Mrs. Patterson does yoga to it." },
+      { count: 100, text: "The collisions are producing particles that don't exist in the Standard Model. You named one 'Steve.'" },
+      { count: 200, text: "At certain frequencies, the collider output syncs perfectly with the Elm Street power grid. Like the grid was designed for this. In 1952." },
+      { count: 250, text: "The Elm Street soil conducts energy in ways that violate everything you know about geology. Core samples show the anomaly extends exactly to the neighborhood boundary. It's artificial. Someone seeded it." },
+      { count: 500, text: "CHRYSALIS wasn't a weapon. It was a fertilizer. Mrs. Patterson's team spent a decade saturating Elm Street with exotic particles. The whole neighborhood is a superconductor. You're not a genius, Gary. You're a seed planted in very special soil." },
     ],
   },
   {
@@ -152,6 +175,11 @@ export const GENERATORS: GeneratorDef[] = [
     milestoneDescs: [
       { count: 10, text: "You can feel the data now. It tastes blue." },
       { count: 25, text: "Every data stream, every calculation — it's like a hundred versions of yourself, all slightly smarter." },
+      { count: 50, text: "The array picked up a stray thought. It wasn't from any of your 'participants.' It was from next door." },
+      { count: 100, text: "Mrs. Patterson's mind showed up in the array uninvited. Her cognitive signature is... vast. Suspiciously vast for a retired librarian." },
+      { count: 200, text: "Max wandered into the garage during a calibration. The array spiked. Every node lit up. Your son's neural pattern is unlike anything the system has ever seen." },
+      { count: 250, text: "Max asked to 'play with the thinking helmet.' You let him. For three seconds, the Mind-Link Array operated at 4,700% capacity. Max said it 'tickled.' He drew a picture afterward. It's a complete unified field theory." },
+      { count: 500, text: "You finally understand. Voss didn't disappear. He succeeded. CHRYSALIS was never about the soil or the machines. It was about creating the right conditions for the next generation. Max isn't your accident. He's the point. He always was." },
     ],
   },
   {
@@ -165,6 +193,11 @@ export const GENERATORS: GeneratorDef[] = [
     milestoneDescs: [
       { count: 10, text: "You're not editing reality anymore. You're AUTHORING it." },
       { count: 25, text: "Reality v23.7 is your favorite — the sky is more purple and dogs can talk." },
+      { count: 50, text: "You tried to revert reality to factory settings. There are no factory settings. There never were." },
+      { count: 100, text: "Agent Reeves confiscated Reality Engine #4. He brought it back the next morning, looking pale. 'Don't point it at the oak tree on Elm and 3rd,' he said. He wouldn't explain." },
+      { count: 200, text: "You pointed it at the oak tree. For a fraction of a second, you saw the tree as it really is: a stabilization anchor. One of dozens. The neighborhood is held together by a lattice that someone built very carefully, a long time ago." },
+      { count: 250, text: "Reeves finally told you the truth. He wasn't assigned to monitor you. He was assigned to protect you. 'Voss was my mentor,' he said. 'He knew someone would come after him. Someone the street would choose. I've been keeping you safe for fifteen years, Gary.'" },
+      { count: 500, text: "The Reality Engine can see through time now. You watched Harold Voss in 1987, right here in this garage, activating his final experiment. He looked at the camera — at YOU — and smiled. 'Hello, Gary. I'm sorry about the mess. Take care of Elm Street. Take care of the boy.' Then he stepped into the light, and was gone." },
     ],
   },
   {
@@ -178,6 +211,11 @@ export const GENERATORS: GeneratorDef[] = [
     milestoneDescs: [
       { count: 10, text: "Astronomers have detected an anomaly. It's coming from... a suburb?" },
       { count: 25, text: "Each loom weaves a different thread of existence. Together, they're making a very complex sweater." },
+      { count: 50, text: "The sweater is sentient now. It has opinions about your other knitwear." },
+      { count: 100, text: "You can see the threads that connect everything on Elm Street. They converge on three points: your garage, Mrs. Patterson's kitchen, and Max's bedroom." },
+      { count: 200, text: "The loom wove something on its own last night. A tapestry. It shows Elm Street as a circuit board, every house a component, every resident a signal. It's been running since 1963. Project CHRYSALIS isn't over. It never ended." },
+      { count: 250, text: "Max stood in front of the tapestry and touched it. The threads rearranged. New patterns, impossible patterns — patterns that solve problems you haven't invented yet. He looked at you and said: 'Dad, I think I know what Dr. Voss was trying to build. It's us. All of us. The whole street. We're the machine.'" },
+      { count: 500, text: "The Cosmic Loom has shown you the full picture. Elm Street. CHRYSALIS. Voss. Patterson. Reeves. You. Max. It was never about science. It was about creating a place where wonder could take root and grow. The greatest experiment ever conducted, and its hypothesis was simple: give one ordinary man an extraordinary garage, surround him with hidden guardians, plant him in impossible soil, and see what blooms. You bloomed, Gary. And now, so will Max." },
     ],
   },
 ];

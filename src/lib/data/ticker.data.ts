@@ -264,6 +264,36 @@ export const TICKER_HEADLINES: TickerHeadline[] = [
   { trigger: { type: "relationshipLevel", npcId: "patterson", level: 10 }, text: "MRS. PATTERSON'S COOKIES CLASSIFIED — Secret ingredient: \"love and trace amounts of experimental compounds.\"" },
   { trigger: { type: "relationshipLevel", npcId: "chen", level: 5 }, text: "PROFESSOR CHEN VISITS REGULARLY — \"For research purposes.\" Leaves with more questions than answers." },
   { trigger: { type: "relationshipLevel", npcId: "chen", level: 10 }, text: "PROFESSOR CHEN CO-AUTHORS PAPER — Title: \"On the Impossibility of What I Just Witnessed in a Garage.\"" },
+
+  // ── Secret Lore / Hidden Narrative Headlines ──────────────────────────
+  // These slowly reveal the deeper mystery: Dr. Harold Voss, Project CHRYSALIS,
+  // the Elm Street Anomaly, the seven nexus points, and Mrs. Patterson's past.
+
+  { trigger: { type: "totalRPReached", amount: 5000 }, text: "COLD CASE REOPENED: 1987 disappearance of Elm Street resident Dr. Harold Voss still unsolved." },
+  { trigger: { type: "generatorMilestone", genId: "chemistry", count: 35 }, text: "LOCAL SOIL SAMPLES show unprecedented isotopic anomalies, says university lab." },
+  { trigger: { type: "generatorMilestone", genId: "soldering", count: 40 }, text: "NEIGHBORHOOD WATCH reports strange lights beneath Elm Street for third consecutive night." },
+  { trigger: { type: "totalRPReached", amount: 50000 }, text: "CLASSIFIED: Former Project CHRYSALIS documents to be declassified in 2087." },
+  { trigger: { type: "generatorMilestone", genId: "server", count: 40 }, text: "BREAKING: Identical suburban anomalies detected in Kyoto, São Paulo, and four other locations." },
+  { trigger: { type: "relationshipLevel", npcId: "patterson", level: 7 }, text: "RETIRED TEACHER receives mysterious government pension from unlisted department." },
+  { trigger: { type: "totalRPReached", amount: 500000 }, text: "REAL ESTATE RECORDS show 14 Elm Street has had seven owners. All scientists. All gone." },
+  { trigger: { type: "generatorMilestone", genId: "prototype", count: 35 }, text: "SATELLITE IMAGERY reveals perfect circular heat signature beneath suburban neighborhood." },
+  { trigger: { type: "generatorMilestone", genId: "containment", count: 35 }, text: "GOVERNMENT AGENT spotted arguing with unknown individuals outside local residence." },
+  { trigger: { type: "generatorMilestone", genId: "mindlink", count: 35 }, text: "LOCAL BOY, 11, submits patent application for 'device he saw in a dream.'" },
+  { trigger: { type: "upgradePurchased", upgradeId: "chemistry_3" }, text: "PHYSICS PROFESSOR relocates across country 'for the air quality,' says absolutely no one believes her." },
+  { trigger: { type: "generatorMilestone", genId: "collider", count: 35 }, text: "GEOLOGICAL SURVEY finds bedrock formation beneath suburb dates to 3.2 billion years ago." },
+  { trigger: { type: "totalRPReached", amount: 5000000 }, text: "ANONYMOUS TIP leads authorities to sealed underground chamber. Contents: classified." },
+  { trigger: { type: "generatorMilestone", genId: "reality", count: 15 }, text: "SEISMOGRAPH at local university records 'impossibly regular' micro-tremors from residential area." },
+  { trigger: { type: "prestigeCount", count: 6 }, text: "FORMER GOVERNMENT employee publishes memoir, immediately recalled by publisher." },
+  { trigger: { type: "totalRPReached", amount: 50000000 }, text: "LOCAL LEGEND: Elm Street built on site of 'unusual phenomena' dating back to indigenous accounts." },
+  { trigger: { type: "clickCount", count: 75000 }, text: "POSTAL SERVICE reports mail addressed to 'The Next One, 14 Elm Street' arrives quarterly. No sender." },
+  { trigger: { type: "generatorMilestone", genId: "cosmic", count: 8 }, text: "AMATEUR ASTRONOMER photographs 'structured light emission' above suburban neighborhood." },
+  { trigger: { type: "totalRPReached", amount: 5e8 }, text: "DELETED RECORDS: Freedom of Information request for Elm Street property returns fully redacted pages." },
+  { trigger: { type: "generatorMilestone", genId: "containment", count: 60 }, text: "NEIGHBOR reports hearing 'a hum that sounds like it's thinking' coming from beneath the street." },
+  { trigger: { type: "labLevel", level: 3 }, text: "SEVEN IDENTICAL suburban developments built worldwide in 1958. All by the same contractor. Who is dead." },
+  { trigger: { type: "generatorMilestone", genId: "mindlink", count: 60 }, text: "CHILD'S DRAWING wins school art prize for 'most imaginative depiction of quantum entanglement.'" },
+  { trigger: { type: "generatorMilestone", genId: "collider", count: 60 }, text: "ELECTROMAGNETIC READINGS off the charts on Elm Street. Utility company blames 'faulty equipment.'" },
+  { trigger: { type: "totalRPReached", amount: 5e10 }, text: "HISTORIAN discovers original deed for Elm Street property contains clause: 'Must always have a garage.'" },
+  { trigger: { type: "ascensionCount", count: 3 }, text: "BREAKING: International consortium of suburban scientists announces... actually, never mind. Redacted." },
 ];
 
 // ── Random Milestone Pools ────────────────────────────────────────────

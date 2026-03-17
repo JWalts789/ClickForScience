@@ -13,6 +13,8 @@ export interface LabExpansionDef {
   name: string;
   description: string;
   flavorText: string;
+  /** Hidden lore flavor text, revealed through deeper investigation. */
+  secretFlavorText?: string;
   /** IP cost to purchase this expansion. */
   ipCost: Decimal;
   /** Cumulative effects granted at this lab level. */
@@ -33,6 +35,7 @@ export const LAB_EXPANSIONS: LabExpansionDef[] = [
     name: "Gary's Garage",
     description: "A single-car garage with a folding table and a dream.",
     flavorText: "The neighbors think you're fixing a lawnmower. You are not fixing a lawnmower.",
+    secretFlavorText: "If you look closely at the foundation, there are marks. Deliberate marks. Someone measured this space very carefully before it was built.",
     ipCost: new Decimal(0),
     effects: [],
     unlocks: ["The beginning of everything"],
@@ -43,6 +46,7 @@ export const LAB_EXPANSIONS: LabExpansionDef[] = [
     name: "The Basement",
     description: "You've dug beneath the garage. Doug noticed but said nothing.",
     flavorText: "Linda asked why there's dirt in the driveway. You said 'gardening.' At 2 AM. In winter.",
+    secretFlavorText: "The soil composition changes abruptly at 3 meters. Below that line, the earth is warm. Not from pipes. Not from anything you can explain.",
     ipCost: new Decimal(500),
     effects: [
       { type: "globalMultiplier", value: 1.25 },
@@ -55,6 +59,7 @@ export const LAB_EXPANSIONS: LabExpansionDef[] = [
     name: "The Warehouse",
     description: "Purchased an abandoned warehouse on the edge of town. Totally normal.",
     flavorText: "The real estate agent asked what it's for. You said 'storage.' She didn't ask what you're storing.",
+    secretFlavorText: "The warehouse's previous owner left in 1988. One year after Voss disappeared. The walls have the same spiral scratched into the concrete.",
     ipCost: new Decimal(2000),
     effects: [
       { type: "globalMultiplier", value: 1.5 },
@@ -68,6 +73,7 @@ export const LAB_EXPANSIONS: LabExpansionDef[] = [
     name: "Underground Facility",
     description: "A sprawling complex beneath the suburb. The ground occasionally hums.",
     flavorText: "Agent Reeves left a note: 'We know.' You left a note back: 'Good.' He hasn't returned.",
+    secretFlavorText: "At this depth, your instruments detect a low-frequency vibration. 42.7-second intervals. It predates every structure above it. It predates the city.",
     ipCost: new Decimal(10000),
     effects: [
       { type: "globalMultiplier", value: 2 },
@@ -82,6 +88,7 @@ export const LAB_EXPANSIONS: LabExpansionDef[] = [
     name: "Orbital Platform",
     description: "You've launched a lab into orbit. NASA didn't help. NASA is confused.",
     flavorText: "The ISS crew waved. You waved back. They radioed Houston. Houston has questions.",
+    secretFlavorText: "From orbit, the seven sites form a perfect heptagram. The lines connecting them pass through every major scientific breakthrough of the last century. This is not a coincidence. There are no coincidences on Elm Street.",
     ipCost: new Decimal(50000),
     effects: [
       { type: "globalMultiplier", value: 3 },

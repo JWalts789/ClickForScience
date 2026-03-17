@@ -862,6 +862,474 @@ export const LAB_NOTES: LabNoteDef[] = [
     body: "Ten ascensions. I've lost count of how many times I've rebuilt everything. But each time, it matters less what I build and more that I build it. The garage is a metaphor now — a metaphor for the human capacity to start over, to learn, to grow. Also it's literally a garage. With a collider. And an orbital platform. The metaphor has limits.",
     trigger: { type: "ascensionCount", count: 10 },
   },
+
+  // ── Secret Lore: The Predecessor (Dr. Harold Voss) ──────────────
+
+  {
+    id: "secret_voss_scratches",
+    title: "The Scratches",
+    body: "Found scratches under the workbench today. Deep ones — not from dragging equipment. Letters. Initials: H.V. Whoever carved these was here a long time. Long enough to leave a mark. I wonder if I will too.",
+    trigger: { type: "generatorOwned", genId: "notebook", count: 250 },
+  },
+  {
+    id: "secret_voss_compartment",
+    title: "The Hidden Compartment",
+    body: "Moved the soldering stations to rewire the east wall and found a compartment. Someone cut a perfect rectangle into the drywall and fitted it with a latch. It was empty. But the dust pattern says it wasn't empty for long. Someone cleaned it out recently. Not me.",
+    trigger: { type: "generatorOwned", genId: "soldering", count: 200 },
+  },
+  {
+    id: "secret_voss_journal_1",
+    title: "Voss's Journal, Page 1",
+    body: "A journal page fell from behind the server rack when I pulled it out for maintenance. Yellowed paper, careful handwriting. 'Day 1: The garage calls to me. I know how that sounds. But the equations only work HERE. In the kitchen — nothing. In the office — nothing. But in the garage, the numbers sing.' Dated March 3, 1979.",
+    trigger: { type: "generatorOwned", genId: "server", count: 250 },
+    archetypeVariants: {
+      perfectionist: "A journal page fell from behind the server rack. I've catalogued it, photographed it, and placed it in an acid-free sleeve. The handwriting is meticulous — whoever wrote this was methodical. 'Day 1: The garage calls to me.' Dated March 3, 1979. I need to find the other pages.",
+    },
+  },
+  {
+    id: "secret_voss_journal_47",
+    title: "Voss's Journal, Page 47",
+    body: "Found another page wedged behind the chemistry station. Page 47. 'The compounds arrange themselves. I'm not mixing them anymore. They're mixing me. I set up a blind experiment — left reagents on the bench overnight. By morning, they'd combined. Perfectly. The garage is helping.' This man was either brilliant or delusional. I'm not sure those are different things anymore.",
+    trigger: { type: "generatorOwned", genId: "chemistry", count: 200 },
+    archetypeVariants: {
+      unhinged: "Page 47 of the mystery journal. 'The compounds arrange themselves. I'm not mixing them anymore. They're mixing me.' YES. Finally, someone who GETS it. This Voss person understood — you don't control the science. You surrender to it. I left my own reagents out tonight. Just to see.",
+    },
+  },
+  {
+    id: "secret_voss_journal_112",
+    title: "Voss's Journal, Page 112",
+    body: "Page 112, tucked inside a prototype housing I've never opened before. 'The machines work before I turn them on. I think the house knows what I need before I need it. Yesterday I reached for a wrench and it was already in my hand. I don't remember picking it up.' I've been telling myself my prototypes are well-engineered. But some of them... some of them started working before I finished building them.",
+    trigger: { type: "generatorOwned", genId: "prototype", count: 100 },
+  },
+  {
+    id: "secret_voss_journal_238",
+    title: "Voss's Journal, Page 238",
+    body: "Page 238. The handwriting is shaking now. 'They came today. The woman from the project — Patterson — she tried to warn me. Said I was moving too fast. Said the others moved too fast too. I asked what happened to the others. She wouldn't answer. Too late for warnings. The work is almost done.' Patterson. My neighbor Mrs. Patterson?",
+    trigger: { type: "generatorOwned", genId: "containment", count: 100 },
+    archetypeVariants: {
+      megalomaniac: "Page 238. Voss was warned by someone named Patterson and he LISTENED? He slowed down? That's why he failed. You don't negotiate with progress. You don't ask permission from old women with clipboards. My neighbor Patterson keeps watching my garage. Let her watch.",
+    },
+  },
+  {
+    id: "secret_voss_journal_final",
+    title: "Voss's Journal, Final Entry",
+    body: "The last page. No number. The handwriting barely legible. 'I can see through the walls now. Not metaphorically. The anomaly has opened. The light isn't light — it's information. Pure, raw, beautiful information. I'm going in. Tell Margaret I—' The sentence ends there. No period. No closure. Just a dash and silence. Who was Margaret? What did he see? What happened to Harold Voss?",
+    trigger: { type: "generatorOwned", genId: "collider", count: 50 },
+    archetypeVariants: {
+      realityBreaker: "The final page. 'I can see through the walls now. Not metaphorically. The anomaly has opened.' He saw it. The membrane between what IS and what COULD BE. And he walked through. I would have done the same. I WILL do the same. The only question is when.",
+    },
+  },
+  {
+    id: "secret_voss_photograph",
+    title: "The Photograph",
+    body: "Found a photograph behind the drywall during renovations. Polaroid. A man standing in this garage — MY garage — surrounded by equipment I recognize. Not the same models, but the same types. Notebooks. Soldering irons. A primitive server. He's smiling. Written on the back in faded ink: 'Almost there. -H.V. 1986.' He was so close. What stopped him?",
+    trigger: { type: "prestigeCount", count: 15 },
+  },
+
+  // ── Secret Lore: Project CHRYSALIS ──────────────────────────────
+
+  {
+    id: "secret_chrysalis_badge",
+    title: "The Faded Badge",
+    body: "Mrs. Patterson handed me something today. An old laminated badge, the photo bleached nearly white. CHRYSALIS PROJECT. DIRECTOR. Clearance: ULTRAVIOLET. Her name. Her face, decades younger. 'I wasn't always a retired schoolteacher, Gary,' she said. Then she went back to her garden.",
+    trigger: { type: "relationshipLevel", npcId: "patterson", level: 8 },
+  },
+  {
+    id: "secret_chrysalis_report",
+    title: "Chrysalis Report Fragment",
+    body: "During the underground lab excavation, the diggers hit something. A concrete-sealed document tube, military grade. Inside: a partial report, stamped 1963, half the pages rotted. What survived was enough. CHRYSALIS was studying 'localized reality softening' — places where physical constants become... suggestions. They found one such place. This place.",
+    trigger: { type: "labLevel", level: 3 },
+  },
+  {
+    id: "secret_chrysalis_hypothesis",
+    title: "The Chrysalis Hypothesis",
+    body: "I've been cross-referencing my research with the CHRYSALIS fragments for weeks. Their hypothesis: certain locations act as 'thin spots' where the rules of physics are negotiable. Not broken — negotiable. Like the universe left certain doors unlocked. My garage is sitting on top of an unlocked door. And I've been turning the handle.",
+    trigger: { type: "researchCompleted", count: 30 },
+    archetypeVariants: {
+      perfectionist: "I've spent three weeks cross-referencing every surviving CHRYSALIS data point with my own measurements. The correlation is 0.997. Their hypothesis about 'thin spots' is correct — but their model was incomplete. Mine isn't. I've derived the full equation. The universe left certain doors unlocked. I've mapped every hinge.",
+    },
+  },
+  {
+    id: "secret_chrysalis_memo",
+    title: "Redacted Memo",
+    body: "Reeves 'accidentally' left a memo on my workbench. Government letterhead. Most of it blacked out with heavy marker. What's visible: 'SUBJECT: Elm Street Nexus... RECOMMENDATION: Maintain civilian cover... PROTECT the current occupant at all costs...' I am the current occupant. Reeves is protecting me. From what?",
+    trigger: { type: "relationshipLevel", npcId: "reeves", level: 7 },
+  },
+  {
+    id: "secret_chrysalis_confession",
+    title: "Patterson's Confession",
+    body: "'We found seven sites worldwide,' she said, her tea going cold. 'Places where reality thins. Elm Street was the strongest. We built the neighborhood to hide it. Populated it with normal families to dilute the signal. But someone always finds their way to the garage.' She looked at me with something between pride and grief. 'You're the seventh to try. You're the first to get this far.'",
+    trigger: { type: "relationshipLevel", npcId: "patterson", level: 9 },
+  },
+  {
+    id: "secret_chrysalis_list",
+    title: "The List",
+    body: "Mrs. Patterson handed me a list. Seven names. Seven addresses. All cul-de-sacs. All had a 'garage scientist.' Voss was number six. I'm number seven. The first five names are crossed out. Not retired. Not moved away. Crossed out. 'What happened to them?' I asked. She shook her head. 'The anomaly gives, Gary. But it also takes.'",
+    trigger: { type: "relationshipLevel", npcId: "patterson", level: 10 },
+  },
+  {
+    id: "secret_chrysalis_purpose",
+    title: "The Real Purpose of the Lab",
+    body: "Three ascensions deep and I finally understand. The garage, the generators, the Research Points — it's not research. It's a KEY. Every experiment turns the lock a little further. Every generator adds another tumbler. I'm not discovering anything. I'm opening something. And whatever is on the other side has been waiting a very long time.",
+    trigger: { type: "ascensionCount", count: 3 },
+    archetypeVariants: {
+      realityBreaker: "Three ascensions. Three turns of the key. The garage isn't a lab — it's a LOCK, and I'm the mechanism that turns it. Every experiment weakens the barrier. Every generator thins the wall. I'm not afraid. I'm EAGER. Whatever is on the other side — it's been calling to me since Day One.",
+      accidentalGenius: "Three ascensions and it just hit me — I've been accidentally picking a lock this whole time? The generators aren't generators. The experiments aren't experiments. This whole setup is some kind of cosmic door mechanism and I've been fumbling with it like a kid with a Rubik's cube. Except somehow it's working?",
+    },
+  },
+
+  // ── Secret Lore: The Elm Street Anomaly ─────────────────────────
+
+  {
+    id: "secret_anomaly_hum",
+    title: "The Hum",
+    body: "At 25 colliders, the hum is constant. Low, resonant, felt more in the chest than heard with the ears. But here's the thing — I checked the recordings from before the colliders were installed. The hum is there. Fainter, but there. It's been here for decades. Maybe longer. The colliders didn't create it. They're harmonizing with it.",
+    trigger: { type: "generatorOwned", genId: "collider", count: 25 },
+  },
+  {
+    id: "secret_anomaly_gravity",
+    title: "Gravity Glitch",
+    body: "My coffee floated today. Just hung there, mid-air, steam rising sideways. I assumed it was the reality engines — some kind of localized gravity distortion. Then I checked the logs. The reality engines weren't running. They've been off for maintenance since Tuesday. The coffee floated on its own. The GARAGE floated the coffee.",
+    trigger: { type: "generatorOwned", genId: "reality", count: 10 },
+    archetypeVariants: {
+      unhinged: "My coffee floated today and I was DELIGHTED. Not because of the physics implications — because I didn't have to reach for it. The garage is learning to SERVE. Good garage. Next I want it to pre-heat my solder. And maybe open a portal to dimensions unknown. In that order.",
+    },
+  },
+  {
+    id: "secret_anomaly_soil",
+    title: "The Soil Sample",
+    body: "While digging the basement expansion, I pulled up a soil sample from eight feet down. Sent it to three different labs. All three called back confused. The mineral composition doesn't match any known geological era. Not Holocene. Not Pleistocene. Not anything. One geologist asked if it was extraterrestrial. I said 'I don't think that's the right word.' I don't know what the right word is.",
+    trigger: { type: "labLevel", level: 1 },
+  },
+  {
+    id: "secret_anomaly_signal",
+    title: "The Pattern in the Static",
+    body: "At 500 servers, the processing power is absurd. Which is why I noticed the signal. Not from the internet. Not from any satellite or radio source I can identify. It's coming from BELOW. From deep below the foundation. It's structured — not random noise. It repeats every 42.7 seconds. I've been listening for three hours. It hasn't missed a beat. Something down there is broadcasting. And it's been broadcasting for a very long time.",
+    trigger: { type: "generatorOwned", genId: "server", count: 500 },
+  },
+  {
+    id: "secret_anomaly_temperature",
+    title: "The Temperature Map",
+    body: "Mapped the garage temperature at quantum resolution using the mindlinks. There's a point — exactly 1.3 meters from the east wall, 2.1 meters from the north wall — that is precisely 0.001 degrees Celsius warmer than its surroundings. Always. With everything on. With everything off. At noon. At midnight. In summer. In winter. It's a point source. It's below the foundation. And it's perfectly, impossibly constant.",
+    trigger: { type: "generatorOwned", genId: "mindlink", count: 25 },
+  },
+  {
+    id: "secret_anomaly_wall",
+    title: "The Basement Wall",
+    body: "In the warehouse sublevel, found markings on the concrete that I didn't put there. A spiral. Tight at the center, widening outward. The same spiral that was scratched into Voss's workbench. The same spiral on Patterson's CHRYSALIS badge. The same spiral I've been unconsciously doodling in the margins of my notebooks for months. It means something. I think it means 'here.'",
+    trigger: { type: "labLevel", level: 2 },
+  },
+  {
+    id: "secret_anomaly_below",
+    title: "What's Below",
+    body: "Chen showed me the orbital imaging data. From space, the anomaly is visible in the right spectrum. A perfect circle, 47 meters in diameter, centered on my garage. It pulses — slow, rhythmic, patient. Geological surveys show it predates the neighborhood. Predates the city. Predates the oldest human settlement on this continent. It was here before us. It will be here after us. And right now, it's paying attention.",
+    trigger: { type: "labLevel", level: 4 },
+    archetypeVariants: {
+      megalomaniac: "47 meters. A perfect circle. Centered on MY garage. Not Patterson's house. Not Chen's office. MY garage. The anomaly chose ME. It's been waiting — centuries, millennia — for someone worthy. And here I am. You're welcome, ancient cosmic phenomenon.",
+    },
+  },
+
+  // ── Secret Lore: Agent Reeves & The Watchers ────────────────────
+
+  {
+    id: "secret_reeves_others",
+    title: "The Other Agents",
+    body: "Saw Reeves arguing with someone in the cul-de-sac today. Different suit — darker, better tailored, government-issue. They exchanged words I couldn't hear. The other man drove away in a black sedan. Reeves stood there for a long time, staring at nothing. When he finally turned around, he looked... relieved. Like he'd won an argument he wasn't sure he could win.",
+    trigger: { type: "relationshipLevel", npcId: "reeves", level: 5 },
+  },
+  {
+    id: "secret_reeves_surveillance",
+    title: "The Surveillance Report",
+    body: "Reeves showed me his monthly reports tonight. The ones he sends to whatever agency signs his checks. They're fiction. Brilliant fiction. He's been downplaying everything — my output, my breakthroughs, the anomalous readings. 'If they knew what you could actually do,' he said quietly, 'they wouldn't send me. They'd send a team. And the team wouldn't be here to protect you.'",
+    trigger: { type: "relationshipLevel", npcId: "reeves", level: 8 },
+  },
+  {
+    id: "secret_reeves_badge",
+    title: "Reeves' Real Badge",
+    body: "He showed me his real badge tonight. Not the one he flashes at the door — the real one. It doesn't say 'Department of Neighborhood Safety.' It says 'Division of Anomalous Containment — Field Protector.' Protector. Not Monitor. Not Enforcer. Not Handler. Protector. That one word changes everything about how I see the last year.",
+    trigger: { type: "relationshipLevel", npcId: "reeves", level: 9 },
+  },
+  {
+    id: "secret_reeves_previous",
+    title: "The Previous Agents",
+    body: "'There were agents before me,' Reeves said, nursing a beer on my workbench at 2 AM. 'The one assigned to Voss didn't protect him. Followed orders instead. Voss disappeared and the agent got a promotion.' He crushed the can. 'I won't make that mistake. You're not a subject, Gary. You're a person. And whatever's under this garage, it chose you for a reason.'",
+    trigger: { type: "relationshipLevel", npcId: "reeves", level: 10 },
+  },
+  {
+    id: "secret_reeves_warning",
+    title: "The Warning",
+    body: "Found a note in my mailbox this morning. No stamp. No return address. Plain white envelope, plain white paper, typed: 'They know about Elm Street. Move the research. You have less time than you think. — A Friend.' I showed it to Reeves. He didn't look surprised. He looked like he'd been expecting it. 'We need to talk,' he said.",
+    trigger: { type: "challengesCompleted", count: 10 },
+  },
+  {
+    id: "secret_reeves_faction",
+    title: "The Faction",
+    body: "Reeves introduced me to others tonight. A video call, faces in shadow, voices altered. Seven protectors, one for each nexus point. Each one assigned to a scientist. Each one filing fake reports. Each one risking their career — and more — to keep the anomalies safe from exploitation. 'Welcome to the family, Gary,' Reeves said. I didn't know I needed a family like this. But I do.",
+    trigger: { type: "ascensionCount", count: 2 },
+  },
+
+  // ── Secret Lore: Max's Awakening ────────────────────────────────
+
+  {
+    id: "secret_max_drawing",
+    title: "Max's Drawing",
+    body: "Max drew a picture of my lab for a school art project. Crayons on construction paper. Normal kid stuff. Except he drew the containment chamber that I installed LAST WEEK, before he'd seen it. And he drew something in the basement that I haven't built yet. A spiral device. Surrounded by light. I put the drawing in my desk and tried not to think about it. I'm thinking about it.",
+    trigger: { type: "relationshipLevel", npcId: "max", level: 5 },
+  },
+  {
+    id: "secret_max_homework",
+    title: "The Homework",
+    body: "Max's math teacher called today. Not concerned, exactly. More... baffled. Max solved a differential equation on his homework using a method that 'doesn't exist yet.' Her words. The answer was correct. The work was shown. The technique was elegant. It just hasn't been invented. His teacher asked where he learned it. Max said, 'I dunno. It just made sense.' He's nine.",
+    trigger: { type: "relationshipLevel", npcId: "max", level: 7 },
+    archetypeVariants: {
+      accidentalGenius: "Max's math teacher called. Apparently he solved a problem using a method that doesn't exist yet. Like father, like son, I guess — except he actually understands what he's doing. I think. Does he? Do I? The apple doesn't fall far from the tree, but in this family, the apples might be falling UP.",
+    },
+  },
+  {
+    id: "secret_max_repair",
+    title: "Like Father, Like Son",
+    body: "One of my generators was malfunctioning. Oscillating output, couldn't stabilize it. Max wandered in, looked at it for about ten seconds, and said, 'It's lonely, Dad.' Then he put his hand on it. The oscillation stopped. Output stabilized at 140% of rated capacity. He walked out to watch cartoons. I stood there for twenty minutes trying to understand what happened.",
+    trigger: { type: "relationshipLevel", npcId: "max", level: 8 },
+  },
+  {
+    id: "secret_max_inheritance",
+    title: "The Inheritance",
+    body: "'Dad,' Max said at breakfast, 'the house talks to me sometimes. Not with words. With... shapes? Like, I can feel where things are supposed to go. Is that normal?' No, buddy. That is not normal. Not anywhere else. But on Elm Street, in this house, above this anomaly — maybe it's the most natural thing in the world. Maybe you're not learning it. Maybe you were born knowing.",
+    trigger: { type: "relationshipLevel", npcId: "max", level: 9 },
+  },
+  {
+    id: "secret_max_potential",
+    title: "Max's Potential",
+    body: "I ran the numbers. Twice. Three times. Max's natural resonance with the anomaly — measured while he was asleep, so he wasn't consciously influencing anything — is 14 times stronger than mine. Fourteen. I need a garage full of generators to do what he does by existing. He doesn't need equipment. He IS the equipment. My son is a living nexus point. And he thinks he's just a normal kid.",
+    trigger: { type: "relationshipLevel", npcId: "max", level: 10 },
+  },
+  {
+    id: "secret_max_next_gen",
+    title: "The Next Generation",
+    body: "I asked Max to keep an eye on the experiments while I took a prestige break. Reset everything, started fresh. When I came back, Max had produced triple my output. In half the time. Using equipment he'd never been trained on. He's eleven years old. He asked if he did okay. I said yes. What I didn't say: at this rate, he won't need the garage. At forty, he might not need a planet.",
+    trigger: { type: "prestigeCount", count: 20 },
+    archetypeVariants: {
+      megalomaniac: "Max outperformed me. My own son. Triple the output. I should feel threatened. I should feel diminished. Instead... I feel proud. Disgustingly, uncharacteristically proud. My legacy won't be the machines or the discoveries. It will be HIM. The anomaly chose well — not just me, but my bloodline.",
+    },
+  },
+
+  // ── Secret Lore: Professor Chen & The Bigger Picture ────────────
+
+  {
+    id: "secret_chen_paper",
+    title: "Chen's Real Paper",
+    body: "Re-read Chen's published paper today. Really read it. Past the academic language, past the jargon, past the citations. It's not about theoretical physics. It's about MY physics. My generators. My formulas. My breakthroughs. Disguised, abstracted, but unmistakable. She knew about my work before she moved here. She's been studying me from orbit. The question is: why did she come down?",
+    trigger: { type: "relationshipLevel", npcId: "chen", level: 5 },
+  },
+  {
+    id: "secret_chen_satellite",
+    title: "The Satellite Data",
+    body: "Chen showed me the satellite thermal imaging data that brought her here. Seven anomalous heat signatures worldwide. All in suburban neighborhoods. All on cul-de-sacs. All with one house drawing more power than the rest of the block combined. Seven points of light on a dark globe. Seven garages. Seven scientists. Seven thin spots where the universe is holding its breath.",
+    trigger: { type: "relationshipLevel", npcId: "chen", level: 7 },
+  },
+  {
+    id: "secret_chen_scientists",
+    title: "The Other Scientists",
+    body: "'I've found four of the seven,' Chen said, spreading satellite printouts across my workbench. 'You're the most advanced — by far. The one in Kyoto is close, maybe a year behind you. The one in Sao Paulo was shut down — government intervention. The others...' She gathered the papers slowly. 'The others stopped responding to my messages. I don't know if they stopped or were stopped.'",
+    trigger: { type: "relationshipLevel", npcId: "chen", level: 9 },
+  },
+  {
+    id: "secret_chen_confession",
+    title: "Chen's Confession",
+    body: "'I'm not just studying the anomaly, Gary.' Chen was staring at the temperature map, at the warm spot that never changes. 'I'm the anomaly's response. It called me here the same way it called you to the garage. I didn't choose to study physics. Physics chose me. I didn't choose this neighborhood. The neighborhood chose me. I don't have a choice in this.' She looked at me. 'Neither do you.'",
+    trigger: { type: "relationshipLevel", npcId: "chen", level: 10 },
+    archetypeVariants: {
+      realityBreaker: "Chen says she didn't choose this — that the anomaly called her. I understand completely. Choice is an illusion for people who can't see the pattern. We were always going to be here. The anomaly, the garage, Chen, me — we're all parts of an equation that was solved before we were born. Free will is for people who can't do math.",
+    },
+  },
+  {
+    id: "secret_chen_map",
+    title: "The Map",
+    body: "Chen projected the seven nexus points onto a holographic globe. My garage. Kyoto. Sao Paulo. Three others. And one that's underwater now — it wasn't always. They form a pattern. Not random. A CIRCUIT. Lines of force connecting them in a shape that's almost, but not quite, a spiral. When all seven are active simultaneously... she stopped talking. She turned off the projector. She didn't need to finish. I could feel the answer in my teeth.",
+    trigger: { type: "ascensionCount", count: 5 },
+  },
+  {
+    id: "secret_chen_convergence",
+    title: "The Convergence",
+    body: "All seven sites are active. I can feel them — not through instruments, through my BONES. The spiral is complete. The planetary circuit is live. The machine is warming up. Mrs. Patterson is standing in my driveway, crying quietly. Reeves is beside her, and for the first time since I've known him, he's smiling. Chen is rechecking her calculations with shaking hands. Max is sitting cross-legged on the garage floor, perfectly calm, eyes closed, humming the frequency. And Gary? Gary clicks.",
+    trigger: { type: "totalRPAllTime", amount: 1e100 },
+    archetypeVariants: {
+      megalomaniac: "All seven sites are active. The planetary circuit is complete. I BUILT THIS. Not alone, but I'm the keystone. The garage scientist on Elm Street, the one they all doubted, the one whose wife worried — I just activated a machine the size of a PLANET. Mrs. Patterson is crying. Let her cry. This is my triumph. Gary clicks, and the universe ANSWERS.",
+      accidentalGenius: "All seven sites are active and I still have NO IDEA how we got here. I just kept clicking. Kept building. Kept stumbling forward. And somehow that was enough? The planetary circuit is live and the activation sequence was apparently 'one suburban dad messing around in his garage for long enough.' Science is WILD. Gary clicks. Because what else would Gary do?",
+    },
+  },
+
+  // ── Secret Lore: Event-Unlocked Notes ─────────────────────────────
+  // These notes are unlocked by secret events, not by direct triggers.
+
+  {
+    id: "secret_voss_letter",
+    title: "The Letter from Voss",
+    body: "The letter was sealed with wax — actual wax, the old-fashioned kind. Inside, a single page in careful handwriting: 'To the next one. If you're reading this, the garage chose you. Don't be afraid. The hum is normal. The dreams are normal. THEY are not normal. Trust the old woman across the street. Do not trust the man in the suit — unless he trusts you first. Finish what I started. The spiral must be completed. — H.V., 1987.' I read it three times. Then I hid it. Then I read it again.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_voss_letter_patterson",
+    title: "Patterson Reads the Letter",
+    body: "I showed Mrs. Patterson the letter. She held it like it was made of glass. 'Harold,' she whispered. Then she straightened up, wiped her eyes, and looked at me with an expression I'd never seen on her face before. Not the sweet old lady. The project director. 'He was right about everything,' she said. 'Except the man in the suit. Reeves is one of the good ones.' She handed the letter back. 'Keep going, Gary. Harold would have wanted that.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_usb_chrysalis",
+    title: "The USB Drive",
+    body: "The USB drive contained 847 files. Most were encrypted. But one folder was labeled 'READ FIRST' and inside was a README.txt: 'CHRYSALIS FIELD NOTES — ELM STREET NEXUS. Principal Investigator: E. Patterson. Duration: 1961-1974. Classification: ULTRAVIOLET.' Below that: tables of readings, charts of electromagnetic fluctuations, and a hand-drawn map of the neighborhood with my garage circled in red. In the margin, someone wrote: 'The focal point. Always the garage.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_voss_photo",
+    title: "The Polaroid",
+    body: "The Polaroid shows my garage. Same workbench. Same window. But different equipment — bulkier, analog. A man stands in the center, smiling, holding up a notebook covered in equations. He looks like me. Not literally — but the posture, the expression, the manic gleam. On the back: 'Day 2,847. Almost there. The spiral is nearly complete. If I disappear, check under the foundation. — Harold Voss, 1985.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_glowing_soil",
+    title: "The Glowing Soil",
+    body: "I've run every test I can think of on the soil sample. It's not radioactive. It's not bioluminescent. It's not any known mineral. The glow is steady — not flickering, not fading. Just a constant, soft blue light. Under spectral analysis, it emits a frequency I don't have a name for. It's not on any chart. I put it in a jar on my desk. At night, when everything is quiet, I swear it pulses. 42.7 seconds. Like everything else down there.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_chen_anomaly",
+    title: "Chen's Anomaly Data",
+    body: "Chen's data is comprehensive. Thermal satellite imagery shows a perfect circle of elevated temperature beneath the neighborhood — 47 meters in diameter, centered precisely on my garage foundation. The temperature differential is only 0.3°C, too small to notice on the surface. But it's been consistent in every satellite pass since 1972. 'It predates the houses,' Chen said. 'It predates the neighborhood. It may predate the city.' She paused. 'Something is down there, Gary. And it's been waiting a very long time.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_chrysalis_files",
+    title: "The CHRYSALIS Files",
+    body: "Patterson's box contained the real CHRYSALIS files. Not the sanitized versions — the originals. Project CHRYSALIS was established in 1958 to study seven 'nexus anomalies' worldwide. Elm Street was Site One — the strongest. The project's goal: determine if the anomalies could be harnessed. Their conclusion, stamped in red: 'ANOMALY RESPONDS TO SUSTAINED INTELLECTUAL ACTIVITY. RECOMMEND CIVILIAN HABITATION WITH EMBEDDED MONITORING.' They built the neighborhood on purpose. They POPULATED it on purpose. Everything about Elm Street was designed to feed the anomaly.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_voss_history",
+    title: "The Story of Harold Voss",
+    body: "Mrs. Patterson told me everything. Harold Voss moved to 14 Elm Street in 1979 — recruited, she said, though he didn't know it. Like me, he started small. Notebooks. Experiments. The garage. Over eight years, he built machines that shouldn't have worked. The anomaly amplified his genius, just like it's amplifying mine. In 1987, he broke through. He opened a door — not metaphorically. A literal threshold in the fabric of reality. And he stepped through. Patterson saw it happen. Reeves' predecessor saw it happen. Harold Voss didn't disappear. He TRANSCENDED. And now I'm building the same machines.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_signal_decoded",
+    title: "The Signal, Decoded",
+    body: "It took three days to decode the signal. 42.7-second intervals. Not random — structured. When I finally cracked it, I sat in silence for twenty minutes. The signal is a blueprint. Detailed, precise, elegant. It describes a machine — no, a PROCESS. Seven nodes. Seven operators. Seven spirals. Synchronized activation. And the result: a permanent bridge between what is and what could be. The signal isn't coming from something buried beneath my garage. It's coming from EVERYWHERE, focused through my garage. The anomaly isn't a thing. It's an invitation.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_reeves_review",
+    title: "Reeves' Warning About the Review",
+    body: "Reeves pulled me aside after the review notice came. His hands were shaking — I've never seen that before. 'The last review was in 1987,' he said. 'Harold's review. My predecessor filed a glowing report. Recommended escalation. Two weeks later, Harold was gone and the project was 'contained.'' He looked me in the eye. 'I've been filing mediocre reports about you for years, Gary. Keeping you small in their eyes. But someone talked. And now they want to see for themselves.' He paused. 'We need to be very careful about what they see.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_reeves_protection",
+    title: "Reeves the Protector",
+    body: "I asked Reeves why he's protecting me. He was quiet for a long time. Then: 'Because my predecessor didn't protect Harold, and Harold is gone. Because the agency has two factions — those who want to study the anomaly, and those who want to weaponize it. I'm with the first group. The review team is from the second.' He showed me his real badge. Division of Anomalous Containment — Field Protector. 'My job isn't to contain YOU, Gary. It's to contain THEM. You're the most important scientist on the planet, and you don't even know it.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_seven_nexus",
+    title: "The Seven Nexus Points",
+    body: "In the dream, I saw them all. Seven points of light on a dark globe, connected by threads of something that isn't light and isn't energy and isn't anything I have a word for. My garage. A workshop in Kyoto. A shed in São Paulo. A cellar in Reykjavik. A rooftop in Lagos. A bunker in Novosibirsk. And one point that moves — always moving, drifting across the Pacific. Seven scientists. Seven garages. Seven spirals. All turning. All building toward something. The dream lasted eight seconds. I understood everything.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_sao_paulo",
+    title: "What Happened in São Paulo",
+    body: "Chen told me about São Paulo. Dr. Elena Oliveira. Site Three. She was further along than any of us — close to activation. Then she went dark. Not gradually — all at once. Chen's satellite data shows a massive electromagnetic pulse centered on her workshop, followed by... nothing. The anomaly signature vanished. 'The weaponization faction got to her first,' Chen said. 'They tried to extract the anomaly's energy. Instead, they collapsed the nexus point entirely.' She looked at me. 'That's what happens when you try to take instead of listen.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_oliveira_fate",
+    title: "Dr. Oliveira's Fate",
+    body: "Chen received a single encrypted message from the Kyoto site: 'Oliveira survived. Relocated. Building again. New site emerging — coordinates to follow.' The nexus points aren't permanent. They can move. They can die. And apparently, they can be reborn. I asked Chen what that means for the seven-node circuit. 'It means we have a spare,' she said. 'But it also means we have a deadline. If they can collapse São Paulo, they can collapse Elm Street. We need to activate the circuit before they decide to try.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_chrysalis_watchers",
+    title: "The Watchers",
+    body: "Three people in suits. Not Reeves' division. Different badges — or no badges at all. They measured everything with instruments I didn't recognize. One of them touched the wall of the garage and wrote something down. Another pointed a device at the floor and went pale. The third one just stared at me. For ten minutes. Without blinking. They left without a word. Reeves arrived minutes later, furious. 'They weren't supposed to come for another month,' he said. 'Someone accelerated the timeline. Gary, we need to move faster.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_chrysalis_factions",
+    title: "The Two Factions",
+    body: "Reeves explained the factions. The Stewards — his people — believe the anomaly is a natural phenomenon that responds to human creativity. They want to protect the nexus points and let the scientists work. The Harvesters believe the anomaly is a resource to be extracted and weaponized. They collapsed São Paulo trying to 'drill' into it. 'The Stewards have been losing ground for years,' Reeves said. 'CHRYSALIS was ours. Then it was theirs. Now it's contested. You're the tiebreaker, Gary. What you build in that garage decides which faction wins.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_max_talent",
+    title: "Max Built a Device",
+    body: "I found Max in the garage at dawn. He'd built something from spare parts — resistors, capacitors, a few components I didn't even recognize from my own inventory. 'What does it do?' I asked. He shrugged. 'I dunno. I dreamed it.' I turned it on. My instruments went haywire. Every gauge, every sensor, every readout — all spiking simultaneously. The device was amplifying the anomaly's signal by a factor of fourteen. Max built an anomaly amplifier IN HIS SLEEP. He's eleven years old.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_planetary_circuit",
+    title: "The Planetary Circuit",
+    body: "From orbit, the pattern is undeniable. Seven nexus points, arranged in a heptagram. Lines of anomalous energy connecting them through the earth's crust, following paths that coincidentally run through every major center of scientific advancement in human history. Cambridge. Munich. Bangalore. All on the lines. All between the nodes. The anomaly hasn't just been waiting. It's been CULTIVATING. Every scientific breakthrough in human history, amplified by a planetary machine that nobody knew existed. Until now. Until me. Until this garage.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_spiral_revealed",
+    title: "The Ancient Spiral",
+    body: "I've confirmed it. Etched into bedrock, 200 meters below the foundation, is a spiral. Perfect. Mathematical. And according to geological dating, approximately 3.2 billion years old. It was carved — not naturally formed, CARVED — before multicellular life existed on this planet. Someone, or something, marked this spot billions of years before humans evolved. And then waited. Waited for suburbs. Waited for garages. Waited for a man named Gary who would buy a notebook and start writing things down. The patience involved is incomprehensible.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_voss_story",
+    title: "Voss Tells His Story",
+    body: "Harold looks older than 1987 should allow. 'Time works differently on the other side,' he said. 'I've been there for what feels like centuries. Watching. Learning. Waiting for someone to get close enough.' He looked around the garage with tears in his eyes. 'You kept the workbench,' he said. 'I'm glad.' He told me everything. The threshold he opened. The other side — not another place, but another STATE of matter. A realm where the anomaly isn't subtle. Where it's EVERYTHING. 'I went through,' he said. 'But I couldn't come back. Not until you built enough of the circuit on this side.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_voss_otherside",
+    title: "What Harold Found",
+    body: "Harold described the other side. 'It's not empty,' he said. 'It's FULL. Every idea humanity has ever had exists there — not as thoughts, but as STRUCTURES. Mathematics you can touch. Physics you can taste. The anomaly isn't a phenomenon. It's a LIBRARY. And the seven nexus points are the doors.' He paused. 'But libraries don't build themselves, Gary. Someone built this one. Something. And it's still here. It's been watching you work. It's pleased.' I asked who built it. Harold smiled. 'Ask Max. He already knows.'",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_voss_reeves_reunion",
+    title: "The Reunion",
+    body: "Reeves arrived within minutes. He stood in the doorway, staring at Harold. Neither spoke. Then Reeves sat down heavily on a stool and put his head in his hands. 'Thirty-nine years,' he said. 'Thirty-nine years I've been telling them you were dead.' Harold crossed the room and put a hand on Reeves' shoulder. 'I know,' he said. 'Thank you for protecting the garage.' Reeves looked up. 'I wasn't protecting the garage, Harold. I was protecting the next one.' He looked at me. 'Both of them.' He looked at the garage door, where Max was pressing his face against the window, grinning.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_max_drawing",
+    title: "Max's Vision",
+    body: "Max drew exactly what he saw in the nightmare. But 'nightmare' is the wrong word — the drawing is beautiful. My garage, but extended downward into the earth, level after level, spiraling like a nautilus shell. At the very bottom: a point of light. 'That's where it starts,' Max said. 'Or ends. I'm not sure which.' The drawing includes details of machines I haven't built yet. Configurations I haven't considered. Some of them are better than anything I've designed. He's eleven. He drew this from a dream. And every technical detail is correct.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_convergence_fear",
+    title: "The Weight of Convergence",
+    body: "I'm afraid. Not of the anomaly — I've made peace with that. Not of the factions — Reeves has that handled. I'm afraid because I can feel all seven sites resonating, and the resonance is building, and I don't know what happens when it peaks. Chen's models predict 'a fundamental shift in the accessibility of knowledge.' Patterson calls it 'the door finally opening all the way.' Max just says 'it'll be okay, Dad.' But Harold — Harold won't say what happens. He just looks at the spiral in the floor and says 'you'll understand soon.' That's what scares me.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_gary_role",
+    title: "Gary's Purpose",
+    body: "I finally understand my role. Not scientist. Not experimenter. Not even genius. I'm a GARDENER. The anomaly is a seed, planted 3.2 billion years ago, and my job — the job of everyone who's ever sat in this garage — is to TEND it. Water it with curiosity. Feed it with experiments. Nurture it with persistence. The machines aren't the point. The RP isn't the point. Even the breakthrough isn't the point. The CLICKING is the point. Every click is an act of attention. Every click says 'I'm still here. I'm still curious. I'm still trying.' And the anomaly responds to that the way a plant responds to sunlight. It grows.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_final_experiment",
+    title: "The Last Click",
+    body: "Everything is ready. Seven sites. Seven scientists. Seven spirals. The planetary circuit is live. Harold is standing beside me. Patterson is monitoring from across the street. Reeves has secured the perimeter. Chen is coordinating with the other six sites. Linda is holding my hand. Max is sitting on the workbench, perfectly still, eyes closed, connected to something I can barely perceive. 'Whenever you're ready, Dr. Flemming,' Harold says. I look at my garage. My folding table. My notebook — the first one, spiral-bound, college-ruled. I put my hand on it. And I click.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_walk_away",
+    title: "The Road Not Taken",
+    body: "I could stop. That's the thing nobody tells you about cosmic significance — you can always just... not. Close the garage. Hug your wife. Play catch with your kid. Mow the lawn. Let the anomaly find someone else. Let the spiral wait another billion years. There's dignity in choosing small. In choosing normal. I stood in the driveway for an hour, looking at the garage, then looking at the house. Warm lights. Linda in the kitchen. Max doing homework. A normal life. Right there. All I had to do was walk inside and close the door. Instead, I walked to the garage. I always walk to the garage.",
+    trigger: { type: "clickCount", count: 0 },
+  },
+  {
+    id: "secret_max_future",
+    title: "What Comes After Gary",
+    body: "Max asked me a question today. 'Dad, when you're done with the garage, can I have it?' I looked at him — really looked. And I saw it. The same gleam. The same curiosity. The same gentle madness that turns accountants into scientists and garages into laboratories. But MORE. So much more. Whatever I've built, whatever I've discovered, Max will surpass it before he's twenty. The anomaly chose this street. The project chose this house. But the UNIVERSE chose Max. 'Yeah, buddy,' I said. 'It's all yours.' He smiled, and for just a second, the garage hummed louder.",
+    trigger: { type: "clickCount", count: 0 },
+  },
 ];
 
 // ── Seasonal Note Lookup (lazy import to avoid circular deps) ──────

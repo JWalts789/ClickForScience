@@ -1032,6 +1032,546 @@ export const EVENTS: EventDef[] = [
   // ── Event-unlocked Lab Notes (referenced by events above) ─────────
   // These notes are triggered by events via unlockNote outcomes.
   // They don't need trigger conditions since they're manually unlocked.
+
+  // ══════════════════════════════════════════════════════════════════════
+  // ── SECRET NARRATIVE EVENTS ──────────────────────────────────────────
+  // Hidden storyline: Dr. Harold Voss, Project CHRYSALIS, the Elm Street
+  // Anomaly, Agent Reeves' protection, Max's awakening, Professor Chen
+  // ══════════════════════════════════════════════════════════════════════
+
+  {
+    id: "secret_letter_in_wall",
+    title: "The Letter in the Wall",
+    body: "While expanding into the basement, the sledgehammer cracks through drywall and something falls out — a sealed envelope, yellowed with age, tucked between the studs. It's addressed in careful, shaking handwriting: \"To The Next One.\" The postmark reads 1987. The return address is this house.",
+    trigger: { type: "labLevel", level: 1 },
+    choices: [
+      {
+        label: "Read It Immediately",
+        description: "+3 Reality Breaker, unlocks hidden note",
+        outcomes: [
+          { type: "madnessAffinity", archetype: "realityBreaker", points: 3 },
+          { type: "unlockNote", noteId: "secret_voss_letter" },
+          { type: "queueTicker", text: "LETTER FOUND IN WALL — Addressed to \"The Next One.\" Gary read it twice. Then sat very still for a long time." },
+        ],
+      },
+      {
+        label: "Save It for Later",
+        description: "+2x all production for 5 minutes (curiosity drives you)",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 2, durationSec: 300 },
+          { type: "queueTicker", text: "SEALED LETTER PLACED IN DESK DRAWER — Gary keeps glancing at it. Productivity somehow increased. The not-knowing is fuel." },
+        ],
+      },
+      {
+        label: "Show It to Patterson",
+        description: "Unlocks hidden note + relationship hint",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_voss_letter_patterson" },
+          { type: "queueTicker", text: "Mrs. Patterson was seen crying on her porch. She held the letter for twenty minutes before giving it back. \"He was a good man,\" she said." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_midnight_visitor",
+    title: "Midnight Visitor",
+    body: "Someone left a package at your door at 3 AM. No camera caught them — which is strange, because you have seven cameras now. Inside the plain brown box: a USB drive with no label and a faded Polaroid of your garage, taken in 1985. There's a man standing in the doorway you don't recognize. He's smiling. Behind him, something in the garage is glowing.",
+    trigger: { type: "generatorOwned", genId: "containment", count: 50 },
+    choices: [
+      {
+        label: "Plug in the USB",
+        description: "+1,000 IP worth of data, unlocks hidden note",
+        outcomes: [
+          { type: "rpBonus", amount: 1000 },
+          { type: "unlockNote", noteId: "secret_usb_chrysalis" },
+          { type: "queueTicker", text: "USB CONTENTS REVIEWED — 847 files. Most encrypted. The ones that aren't contain equations Gary has never seen. Some he's independently derived." },
+        ],
+      },
+      {
+        label: "Analyze the Photo",
+        description: "+3 Accidental Genius, unlocks note about Voss",
+        outcomes: [
+          { type: "madnessAffinity", archetype: "accidentalGenius", points: 3 },
+          { type: "unlockNote", noteId: "secret_voss_photo" },
+          { type: "queueTicker", text: "POLAROID ANALYZED — Spectral analysis of the glow in the background matches no known light source. The man has been identified: Dr. Harold Voss, PhD. Missing since 1987." },
+        ],
+      },
+      {
+        label: "Give Both to Reeves",
+        description: "Relationship boost + ticker",
+        outcomes: [
+          { type: "rpBonus", amount: 500 },
+          { type: "queueTicker", text: "EVIDENCE TURNED OVER TO AGENT REEVES — He didn't look surprised. He looked relieved. \"Good. You're not like him. You're smarter than him.\" He wouldn't say who." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_max_nightmare",
+    title: "Max's Nightmare",
+    body: "Max woke up screaming at 2 AM. Not a normal nightmare — he was rigid, eyes open, speaking in a monotone about \"the spiral\" and \"the seven points.\" When he finally calmed down, he grabbed a crayon and drew without stopping for forty minutes. The drawing: your lab, but impossibly deep, extending hundreds of meters underground. At the bottom, something spiraling. Glowing. Waiting.",
+    trigger: { type: "madnessLevel", level: 5 },
+    choices: [
+      {
+        label: "Comfort Him",
+        description: "+3x click for 3 minutes, relationship hint",
+        outcomes: [
+          { type: "clickBuff", multiplier: 3, durationSec: 180 },
+          { type: "queueTicker", text: "MAX COMFORTED — Gary held his son until dawn. Max said: \"It's okay, Dad. It's not scary. It just wants to talk.\" Gary did not find this comforting." },
+        ],
+      },
+      {
+        label: "Study the Drawing",
+        description: "Unlocks hidden note, +500 RP",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_max_drawing" },
+          { type: "rpBonus", amount: 500 },
+          { type: "queueTicker", text: "CHILD'S DRAWING ANALYZED — The geological layers in Max's crayon drawing are accurate to within 3%. He's eleven. He's never taken geology." },
+        ],
+      },
+      {
+        label: "Build What He Drew",
+        description: "+3x all production for 2 minutes, +3 Megalomaniac",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 3, durationSec: 120 },
+          { type: "madnessAffinity", archetype: "megalomaniac", points: 3 },
+          { type: "queueTicker", text: "CONSTRUCTION BEGINS ON CHILD'S BLUEPRINT — Linda: \"You're building something an eleven-year-old dreamed?\" Gary: \"He dreamed it CORRECTLY, Linda.\"" },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_soil_glows",
+    title: "The Soil Glows",
+    body: "During warehouse foundation work, the excavators hit something at twelve meters down — a layer of soil that glows faintly blue in the dark. Not bioluminescence. Not radiation. The Geiger counter reads normal. The spectrometer reads impossible. The soil is warm to the touch. It hums at 42.7-second intervals. The construction crew quit on the spot.",
+    trigger: { type: "labLevel", level: 2 },
+    choices: [
+      {
+        label: "Collect Samples",
+        description: "+3 Unhinged, chemistry buff, unlocks hidden note",
+        outcomes: [
+          { type: "madnessAffinity", archetype: "unhinged", points: 3 },
+          { type: "productionBuff", target: "chemistry", multiplier: 3, durationSec: 180 },
+          { type: "unlockNote", noteId: "secret_glowing_soil" },
+          { type: "queueTicker", text: "GLOWING SOIL COLLECTED — Sample jars arranged on shelf. They pulse in unison. Gary has started humming at the same frequency. He doesn't notice." },
+        ],
+      },
+      {
+        label: "Seal It Off",
+        description: "+10,000 RP (safe approach)",
+        outcomes: [
+          { type: "rpBonus", amount: 10000 },
+          { type: "queueTicker", text: "ANOMALOUS SOIL LAYER SEALED — Three feet of concrete poured over it. The glow still comes through at night. Gary pretends not to notice." },
+        ],
+      },
+      {
+        label: "Call Professor Chen",
+        description: "Research speed buff + hidden note about anomaly",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 2, durationSec: 240 },
+          { type: "unlockNote", noteId: "secret_chen_anomaly" },
+          { type: "queueTicker", text: "PROFESSOR CHEN ARRIVES WITHIN 20 MINUTES — Suspiciously fast. He brought specialized equipment. Also suspiciously prepared. \"I've been waiting for this call,\" he said." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_patterson_box",
+    title: "Patterson's Box",
+    body: "Mrs. Patterson appeared at your door holding a padlocked metal box. Military-grade. Dented. Heavy. \"Harold left this with me in '87,\" she said, not meeting your eyes. \"He said the next person to work in that garage would know the combination. Three numbers. He said they'd just... know.\" She set it down and left before you could ask anything else. The lock has three dials.",
+    trigger: { type: "generatorOwned", genId: "prototype", count: 50 },
+    choices: [
+      {
+        label: "Try the Combination",
+        description: "Massive IP + hidden note about CHRYSALIS",
+        outcomes: [
+          { type: "rpBonus", amount: 50000 },
+          { type: "unlockNote", noteId: "secret_chrysalis_files" },
+          { type: "queueTicker", text: "BOX OPENED — Combination: 4-2-7. Gary knew it instantly. Inside: files stamped PROJECT CHRYSALIS. Classification level: doesn't exist." },
+        ],
+      },
+      {
+        label: "Break It Open",
+        description: "+15,000 RP, +2 Gadgeteer",
+        outcomes: [
+          { type: "rpBonus", amount: 15000 },
+          { type: "madnessAffinity", archetype: "gadgeteer", points: 2 },
+          { type: "queueTicker", text: "BOX FORCED OPEN — Contents partially damaged. Some files readable. Gary salvaged what he could. Mrs. Patterson: \"Harold would have wanted you to use the combination.\"" },
+        ],
+      },
+      {
+        label: "Ask Patterson About Harold",
+        description: "Unlocks note about Voss + relationship hint",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_voss_history" },
+          { type: "queueTicker", text: "MRS. PATTERSON TELLS ALL — Tea. Cookies. Tears. Harold Voss was brilliant, kind, and terrified of what he'd found. He didn't disappear. He was taken. \"By whom?\" \"By what, dear. By what.\"" },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_the_signal",
+    title: "The Signal",
+    body: "Your server cluster intercepted something. Not data — a pattern. A repeating pulse at 42.7-second intervals. It's not radio. Not microwave. Not any known frequency or medium. Your instruments say it's coming from directly below the garage, approximately 200 meters down. It's been broadcasting continuously since before your servers existed. They just finally got sensitive enough to hear it.",
+    trigger: { type: "generatorOwned", genId: "server", count: 250 },
+    choices: [
+      {
+        label: "Decode It",
+        description: "+3 Perfectionist, +25,000 IP, unlocks hidden note",
+        outcomes: [
+          { type: "madnessAffinity", archetype: "perfectionist", points: 3 },
+          { type: "rpBonus", amount: 25000 },
+          { type: "unlockNote", noteId: "secret_signal_decoded" },
+          { type: "queueTicker", text: "SIGNAL DECODED — It's not a message. It's a heartbeat. Something beneath Elm Street has been alive for a very, very long time." },
+        ],
+      },
+      {
+        label: "Amplify It",
+        description: "+3x all production for 2 minutes, +4 Reality Breaker",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 3, durationSec: 120 },
+          { type: "madnessAffinity", archetype: "realityBreaker", points: 4 },
+          { type: "queueTicker", text: "SIGNAL AMPLIFIED — Every device on Elm Street flickered. Dogs howled. Mrs. Patterson's cookies burned. The glow beneath the garage intensified. Gary smiled." },
+        ],
+      },
+      {
+        label: "Report It to Reeves",
+        description: "Relationship hint + ticker",
+        outcomes: [
+          { type: "rpBonus", amount: 5000 },
+          { type: "queueTicker", text: "SIGNAL REPORTED TO AGENT REEVES — Long pause. \"We know about the signal, Gary. We've known since 1962. What we didn't know is that someone could hear it without the equipment.\" He looked at Gary differently after that." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_reeves_warning",
+    title: "Reeves' Warning",
+    body: "Reeves pulled you aside after your latest prestige. No pretense. No small talk. \"Listen carefully, Gary. There's a review coming. My superiors want to 'evaluate your progress.' That's not good. They evaluated Voss too.\" He paused. \"Voss didn't fail the evaluation. He passed. That's when they took him.\"",
+    trigger: { type: "prestigeCount", count: 10 },
+    choices: [
+      {
+        label: "Hide the Evidence",
+        description: "Lose 5% RP but stay safe, unlocks hidden note",
+        outcomes: [
+          { type: "rpCost", percent: 5 },
+          { type: "unlockNote", noteId: "secret_reeves_review" },
+          { type: "queueTicker", text: "EVIDENCE CONCEALED — Gary downgraded visible equipment. Hid the real lab behind a false wall. Reeves helped. \"Make it look boring,\" he said. \"Boring is safe.\"" },
+        ],
+      },
+      {
+        label: "Prepare a Demonstration",
+        description: "Risky: big RP multiplier + 3 Megalomaniac",
+        outcomes: [
+          { type: "rpMultSeconds", seconds: 300 },
+          { type: "madnessAffinity", archetype: "megalomaniac", points: 3 },
+          { type: "queueTicker", text: "DEMONSTRATION PREPARED — Gary's plan: show them just enough to impress, not enough to scare. Reeves: \"That's exactly what Voss said.\" Gary: \"I'm not Voss.\"" },
+        ],
+      },
+      {
+        label: "Trust Reeves Completely",
+        description: "Unlocks note about Reeves' protection + ticker",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_reeves_protection" },
+          { type: "queueTicker", text: "GARY TRUSTS REEVES — \"Why are you protecting me?\" Long silence. \"Because I failed to protect the last one. I won't make that mistake again.\" Reeves' hands were shaking." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_the_dream",
+    title: "The Dream",
+    body: "You dreamed of a spiral. Not a metaphor — a physical, luminous spiral carved into bedrock beneath the earth. Seven points of light scattered across the globe, connected by threads of something that isn't matter or energy but somehow both. São Paulo. Kyoto. Reykjavik. Nairobi. Perth. Svalbard. And here. Elm Street. You woke up at 4 AM and knew — KNEW — exactly how to reconfigure every generator in your lab for a 40% efficiency gain. The knowledge was just... there.",
+    trigger: { type: "madnessLevel", level: 7 },
+    choices: [
+      {
+        label: "Follow the Inspiration",
+        description: "+5x all production for 2 minutes, +5 Reality Breaker — dangerous",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 5, durationSec: 120 },
+          { type: "madnessAffinity", archetype: "realityBreaker", points: 5 },
+          { type: "queueTicker", text: "DREAM-INSPIRED MODIFICATIONS COMPLETE — Every generator hums in a new key. Harmonics match the 42.7-second pulse. Gary hasn't blinked in three hours. He says he can see the threads." },
+        ],
+      },
+      {
+        label: "Resist It",
+        description: "Small RP bonus, reduce madness slightly",
+        outcomes: [
+          { type: "rpBonus", amount: 10000 },
+          { type: "madnessAffinity", archetype: "realityBreaker", points: -3 },
+          { type: "madnessAffinity", archetype: "megalomaniac", points: -2 },
+          { type: "queueTicker", text: "Gary Flemming was seen sleeping normally for once. Eight full hours. No talking in his sleep. Neighbors relieved. The glow under the garage dimmed slightly." },
+        ],
+      },
+      {
+        label: "Write It All Down",
+        description: "Unlocks hidden note, +15,000 RP, +2 Accidental Genius",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_seven_nexus" },
+          { type: "rpBonus", amount: 15000 },
+          { type: "madnessAffinity", archetype: "accidentalGenius", points: 2 },
+          { type: "queueTicker", text: "DREAM JOURNAL — 47 pages in one sitting. Diagrams of a global network. Seven points. Seven scientists. Seven garages. Gary's handwriting gets steadier as the pages go on, not shakier." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_chen_urgent_call",
+    title: "Chen's Urgent Call",
+    body: "Professor Chen called at midnight. No pleasantries. His voice was ragged. \"Gary, the São Paulo site went dark. Permanently. Dr. Oliveira stopped responding three days ago. Her equipment is still running but she's... gone. Same as Voss. I need your help calibrating the detection array before we lose another one. Now, Gary. Right now.\"",
+    trigger: { type: "labLevel", level: 3 },
+    choices: [
+      {
+        label: "Help Immediately",
+        description: "Research speed buff + hidden note + 2 Perfectionist",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 2, durationSec: 300 },
+          { type: "unlockNote", noteId: "secret_sao_paulo" },
+          { type: "madnessAffinity", archetype: "perfectionist", points: 2 },
+          { type: "queueTicker", text: "DETECTION ARRAY CALIBRATED — Five remaining sites now monitored. São Paulo silent. Kyoto fluctuating. Gary worked 16 hours straight. Chen said: \"You're the strongest signal now.\"" },
+        ],
+      },
+      {
+        label: "Ask What Happened to Oliveira",
+        description: "Unlocks hidden note about the danger + ticker",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_oliveira_fate" },
+          { type: "queueTicker", text: "CHEN EXPLAINS — \"The nexus points aren't just anomalies. They're doors. Oliveira opened hers. She went through.\" Pause. \"Voss did the same thing in '87. The door doesn't open from the other side.\"" },
+        ],
+      },
+      {
+        label: "Refuse — Too Risky",
+        description: "+5,000 RP (work undisturbed)",
+        outcomes: [
+          { type: "rpBonus", amount: 5000 },
+          { type: "queueTicker", text: "Professor Chen was seen packing boxes into his car at 3 AM. He left a note under Gary's door: \"When you're ready. If there's still time.\" His office at the university is empty." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_the_inspection",
+    title: "The Inspection",
+    body: "Three people arrived in a black SUV. Not Reeves' people — he'd have warned you. They wore suits that cost more than your first car. Badges you've never seen: no agency name, just a spiral logo and a number. They measured everything. Took soil samples. Pointed instruments at walls. Left without a single word. Reeves appeared ten minutes later, furious, pacing your driveway. \"Those weren't mine. Those were CHRYSALIS.\"",
+    trigger: { type: "ascensionCount", count: 1 },
+    choices: [
+      {
+        label: "Panic",
+        description: "Lose some RP, unlock note about The Watchers",
+        outcomes: [
+          { type: "rpCost", percent: 3 },
+          { type: "unlockNote", noteId: "secret_chrysalis_watchers" },
+          { type: "queueTicker", text: "UNIDENTIFIED AGENTS DEPARTED — Gary checked every lock twice. Installed three new cameras. Sleep quality: zero. The spiral logo burns in his mind." },
+        ],
+      },
+      {
+        label: "Ask Reeves Who They Are",
+        description: "Unlocks note about the factions + ticker",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_chrysalis_factions" },
+          { type: "queueTicker", text: "REEVES EXPLAINS — \"CHRYSALIS was defunded in '91. Officially. The people who ran it didn't stop. They just stopped filing paperwork.\" He looked old. Tired. \"I've been keeping you off their radar. That's over now.\"" },
+        ],
+      },
+      {
+        label: "Carry On Working",
+        description: "+3x all production for 2 minutes (defiance), +2 Megalomaniac",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 3, durationSec: 120 },
+          { type: "madnessAffinity", archetype: "megalomaniac", points: 2 },
+          { type: "queueTicker", text: "GARY RETURNS TO WORK — \"Let them watch. Let them measure. They had sixty years and a billion dollars. I have a garage.\" The generators hummed louder, as if in agreement." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_max_built_something",
+    title: "Max Built Something",
+    body: "You found Max in the garage at 6 AM, surrounded by spare parts. He'd built a device. It's about the size of a shoebox, cobbled together from capacitors, wire, a broken radio, and somehow a piece of the glowing soil he shouldn't have been able to access. It works. It produces a stable field that makes nearby generators run 2% more efficiently. You don't understand how. Your PhD doesn't explain it. He's eleven.",
+    trigger: { type: "generatorCount", count: 2000 },
+    choices: [
+      {
+        label: "Praise Him",
+        description: "Unlocks hidden note about Max + ticker",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_max_talent" },
+          { type: "queueTicker", text: "MAX PRAISED FOR INVENTION — He beamed. \"Dad, I just listened to what it wanted to be.\" Gary nodded like that made sense. It doesn't make sense. But Max's device still works." },
+        ],
+      },
+      {
+        label: "Study the Device",
+        description: "Massive IP bonus + hidden note about Max's potential",
+        outcomes: [
+          { type: "rpBonus", amount: 100000 },
+          { type: "unlockNote", noteId: "secret_max_potential" },
+          { type: "queueTicker", text: "DEVICE ANALYZED — Operating principles: unknown. Power source: unknown. Builder's age: 11. Chen's assessment: \"He's not a scientist. He's a conduit.\" Gary asked him to never say that again." },
+        ],
+      },
+      {
+        label: "Ground Him (for Safety)",
+        description: "+5,000 RP, concerned ticker",
+        outcomes: [
+          { type: "rpBonus", amount: 5000 },
+          { type: "queueTicker", text: "Max was seen looking sadly at the garage from his bedroom window. The device still works without him nearby. It shouldn't. Gary locked it in a drawer. It hums at night." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_spiral_in_basement",
+    title: "The Spiral in the Basement",
+    body: "At orbital altitude, your deep-scan sensors finally had the resolution to see it clearly. A perfect logarithmic spiral, etched into bedrock 200 meters below your garage. Diameter: 47 meters. Age, according to geological analysis: 3.8 billion years. Older than complex life. Older than the atmosphere. It was carved into the earth before anything lived here. And it's identical to the spirals beneath the other six sites. Seven spirals. One pattern. Waiting.",
+    trigger: { type: "labLevel", level: 4 },
+    choices: [
+      {
+        label: "Analyze It Thoroughly",
+        description: "Massive IP + hidden note about the planetary circuit",
+        outcomes: [
+          { type: "rpBonus", amount: 500000 },
+          { type: "unlockNote", noteId: "secret_planetary_circuit" },
+          { type: "queueTicker", text: "SPIRAL MAPPED COMPLETELY — It's not a carving. It's a circuit. The seven spirals are nodes in a planetary-scale machine. Purpose: unknown. Status: warming up. Has been warming up for 3.8 billion years." },
+        ],
+      },
+      {
+        label: "Attempt Activation",
+        description: "Huge production buff but risky, +5 Reality Breaker",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 10, durationSec: 60 },
+          { type: "madnessAffinity", archetype: "realityBreaker", points: 5 },
+          { type: "queueTicker", text: "ACTIVATION ATTEMPTED — For seventeen seconds, every light on Elm Street turned blue. Every dog sat down. Every person paused mid-sentence. Then normal. But the spiral is 0.001% brighter now. It noticed." },
+        ],
+      },
+      {
+        label: "Tell Everyone",
+        description: "Unlocks hidden note + multiple NPC reaction tickers",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_spiral_revealed" },
+          { type: "queueTicker", text: "THE SPIRAL REVEALED — Chen: \"Finally.\" Patterson: \"Harold always knew.\" Reeves: \"This changes the threat assessment.\" Linda: \"Under our HOUSE?\" Max, quietly: \"It says hello.\"" },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_voss_returns",
+    title: "Voss Returns",
+    body: "A man appeared in your garage. Not walked in — appeared. One moment empty air, the next: a man in his 60s, disheveled, wearing a brown corduroy jacket with leather elbow patches that went out of style in 1987. Because that's when he last wore it. \"Hello,\" he said, blinking in the fluorescent light. \"I'm Harold. Harold Voss. I see you found my notes.\" He looked around the lab with wonder. \"You've done so much more than I ever did. How long have I been gone?\" You tell him. He sits down heavily. \"Thirty-nine years. It felt like an afternoon.\"",
+    trigger: { type: "ascensionCount", count: 5 },
+    choices: [
+      {
+        label: "Welcome Him Home",
+        description: "Unlocks Voss's story + global production buff",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_voss_story" },
+          { type: "productionBuff", target: "all", multiplier: 2, durationSec: 600 },
+          { type: "queueTicker", text: "DR. HAROLD VOSS RETURNS — 39 years. Same clothes. Same smile. Mrs. Patterson brought cookies. She didn't say a word. Just held his hand for a very long time." },
+        ],
+      },
+      {
+        label: "Question Him About the Other Side",
+        description: "Unlocks note about what happened + 50,000 IP",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_voss_otherside" },
+          { type: "rpBonus", amount: 50000 },
+          { type: "queueTicker", text: "VOSS DEBRIEFED — \"It's not another place. It's another... layer. Everything is the same but the rules are different. Time is optional. Space is a suggestion. And it's aware. It's been aware the whole time.\"" },
+        ],
+      },
+      {
+        label: "Call Reeves",
+        description: "Unlocks reunion note + ticker + relationship hints",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_voss_reeves_reunion" },
+          { type: "queueTicker", text: "REEVES AND VOSS REUNITED — Reeves stood in the doorway for thirty seconds. Then: \"You son of a bitch. I wrote the report. I closed your file. I—\" He hugged him. First known display of emotion from Agent Reeves." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_convergence_begins",
+    title: "The Convergence Begins",
+    body: "All seven nexus points are active. You can feel them — not metaphorically, literally. A warmth in your chest that pulses at 42.7-second intervals, synchronized with six other people in six other garages on six other continents. The planetary circuit is completing. After 3.8 billion years of patient waiting, the machine beneath the world is waking up. Voss says it's not a machine. Chen says it is. Reeves says it doesn't matter what it is, only what it does. And what it does... is open a door.",
+    trigger: { type: "totalRPAllTime", amount: 1e80 },
+    choices: [
+      {
+        label: "Embrace It",
+        description: "Massive permanent buff, +3 all archetypes",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 7, durationSec: 300 },
+          { type: "madnessAffinity", archetype: "megalomaniac", points: 3 },
+          { type: "madnessAffinity", archetype: "perfectionist", points: 3 },
+          { type: "madnessAffinity", archetype: "realityBreaker", points: 3 },
+          { type: "madnessAffinity", archetype: "unhinged", points: 3 },
+          { type: "madnessAffinity", archetype: "gadgeteer", points: 3 },
+          { type: "madnessAffinity", archetype: "accidentalGenius", points: 3 },
+          { type: "queueTicker", text: "THE CONVERGENCE EMBRACED — Gary opened his arms and the garage filled with light. Every generator sang. Every note aligned. The spiral beneath pulsed once, strong, and somewhere, six other scientists did the same." },
+        ],
+      },
+      {
+        label: "Fear It",
+        description: "Unlocks hidden note + 500,000 RP (caution has value)",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_convergence_fear" },
+          { type: "rpBonus", amount: 500000 },
+          { type: "queueTicker", text: "CONVERGENCE DELAYED — Gary hesitated. The pulse dimmed. Voss: \"That's okay. It waited 3.8 billion years. It can wait a little longer.\" But can it?" },
+        ],
+      },
+      {
+        label: "Lead It",
+        description: "Unlocks note about Gary's role, +5 Megalomaniac",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_gary_role" },
+          { type: "madnessAffinity", archetype: "megalomaniac", points: 5 },
+          { type: "queueTicker", text: "GARY TAKES COMMAND — Seven sites. Seven scientists. One network. And Gary Flemming, suburban dad with a PhD and a garage, at the center of it all. The universe has a sense of humor." },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: "secret_final_experiment",
+    title: "The Final Experiment",
+    body: "Everything has led to this. The spiral beneath your garage. The anomaly that's been humming for 3.8 billion years. The seven sites across the world. Voss, who went through and came back. Patterson, who kept the faith for four decades. Chen, who tracked the signal from space. Reeves, who broke every rule to keep you safe. Max, who can hear what no instrument can detect. Linda, who held it all together with dinner and patience and love. One last experiment. One button. The door opens — not for one person this time, but for everyone. You started with a notebook and a click. You'll end with a choice that changes everything. Or nothing. The click is yours.",
+    trigger: { type: "totalRPAllTime", amount: 1e150 },
+    choices: [
+      {
+        label: "Run the Final Experiment",
+        description: "Ultimate production buff + final hidden note",
+        outcomes: [
+          { type: "productionBuff", target: "all", multiplier: 100, durationSec: 600 },
+          { type: "unlockNote", noteId: "secret_final_experiment" },
+          { type: "queueTicker", text: "THE FINAL EXPERIMENT — Gary pressed the button. The garage filled with light. The spiral sang. And for one perfect moment, every person on Elm Street understood everything. Then it was Tuesday again. But different. Better." },
+        ],
+      },
+      {
+        label: "Walk Away",
+        description: "Reflective hidden note + 1,000,000 RP",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_walk_away" },
+          { type: "rpBonus", amount: 1000000 },
+          { type: "queueTicker", text: "GARY WALKS AWAY — From the lab. From the spiral. From the door. He went upstairs. Made pancakes. Helped Max with homework. The garage hums. It'll wait. It always waits." },
+        ],
+      },
+      {
+        label: "Let Max Do It",
+        description: "Unlocks note about the future + next generation ticker",
+        outcomes: [
+          { type: "unlockNote", noteId: "secret_max_future" },
+          { type: "queueTicker", text: "MAX PRESSES THE BUTTON — His hand was steady. He wasn't scared. \"It's okay, Dad. I've been talking to it my whole life.\" The light was warm. The hum became music. And the next chapter began — not Gary's. Not Voss's. Max's. The youngest scientist on Elm Street. The best one." },
+        ],
+      },
+    ],
+  },
 ];
 
 // ── Lookup ──────────────────────────────────────────────────────────
