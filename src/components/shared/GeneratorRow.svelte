@@ -326,20 +326,47 @@
 
   @media (max-width: 600px) {
     .gen-main {
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: var(--space-xs);
+      padding: var(--space-sm);
+    }
+
+    /* Top row: name + stats inline */
+    .gen-info {
+      display: flex;
+      align-items: baseline;
       gap: var(--space-sm);
+    }
+
+    .gen-name {
+      font-size: var(--text-sm);
+    }
+
+    .gen-desc {
+      display: none;
     }
 
     .gen-stats {
       min-width: auto;
       flex-direction: row;
-      gap: var(--space-sm);
+      gap: var(--space-md);
       align-items: baseline;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .gen-owned {
+      font-size: var(--text-base);
     }
 
     .gen-actions {
       width: 100%;
-      justify-content: center;
+      gap: var(--space-xs);
+    }
+
+    .autobuyer-toggle {
+      min-height: 40px;
+      min-width: 50px;
     }
 
     .gen-buy {
@@ -348,6 +375,7 @@
       justify-content: center;
       gap: var(--space-sm);
       min-width: auto;
+      min-height: 44px;
     }
   }
 </style>

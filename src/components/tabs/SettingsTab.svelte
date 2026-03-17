@@ -292,4 +292,60 @@
   .danger:hover:not(:disabled) {
     background: rgba(240, 113, 120, 0.1);
   }
+
+  @media (max-width: 600px) {
+    .settings-tab {
+      padding: var(--space-sm);
+    }
+
+    .notation-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xs);
+    }
+
+    .notation-options button {
+      min-height: 44px;
+      font-size: var(--text-sm);
+    }
+
+    .save-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xs);
+    }
+
+    .save-actions button {
+      min-height: 44px;
+    }
+
+    .toggle-row {
+      min-height: 44px;
+      padding: var(--space-sm) 0;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+
+    .slider-row {
+      flex-wrap: wrap;
+    }
+
+    .slider-label {
+      min-width: auto;
+      width: 100%;
+    }
+
+    .slider-row input[type="range"] {
+      min-height: 44px;
+    }
+
+    .coffee-btn {
+      width: 100%;
+      justify-content: center;
+      min-height: 48px;
+    }
+  }
 </style>

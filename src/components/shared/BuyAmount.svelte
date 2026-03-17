@@ -54,4 +54,25 @@
     border-color: var(--color-rp);
     font-weight: 600;
   }
+
+  @media (max-width: 600px) {
+    .buy-amount {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .buy-label {
+      width: 100%;
+      text-align: center;
+      margin-right: 0;
+      margin-bottom: 2px;
+    }
+
+    .buy-btn {
+      min-height: 36px;
+      min-width: 44px;
+      padding: var(--space-xs) var(--space-sm);
+      font-size: var(--text-xs);
+    }
+  }
 </style>
