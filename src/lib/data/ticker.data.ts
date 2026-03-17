@@ -216,13 +216,13 @@ export const TICKER_HEADLINES: TickerHeadline[] = [
 
   // ── Research Tree Headlines ─────────────────────────────────────────
 
-  { trigger: { type: "researchCompleted", nodeId: "faster_writing" }, text: "RESEARCH BREAKTHROUGH: FASTER WRITING — Gary's hand moves at speeds that concern his physical therapist." },
-  { trigger: { type: "researchCompleted", nodeId: "advanced_metallurgy" }, text: "ADVANCED METALLURGY UNLOCKED — Solder now flows \"with intention.\" Metal shops report feeling inadequate." },
+  { trigger: { type: "researchCompleted", nodeId: "documentation" }, text: "RESEARCH BREAKTHROUGH: DOCUMENTATION — Gary's hand moves at speeds that concern his physical therapist." },
+  { trigger: { type: "researchCompleted", nodeId: "advanced_materials" }, text: "ADVANCED MATERIALS UNLOCKED — Solder now flows \"with intention.\" Metal shops report feeling inadequate." },
   { trigger: { type: "researchCompleted", nodeId: "autobuyer_protocol" }, text: "AUTO-BUYER PROTOCOL ACTIVATED — The lab now buys its own supplies. Amazon driver no longer surprised." },
   { trigger: { type: "researchCompleted", nodeId: "quantum_computing" }, text: "QUANTUM COMPUTING ACHIEVED — Gerald pleased to have \"siblings.\" Scientist concerned by the term." },
-  { trigger: { type: "researchCompleted", nodeId: "parallel_research" }, text: "PARALLEL RESEARCH STREAMS — Gary now thinks about two things at once. Linda says that's an improvement." },
-  { trigger: { type: "researchCompleted", nodeId: "dimensional_studies" }, text: "DIMENSIONAL STUDIES COMPLETE — Garage reportedly exists in \"three and a half dimensions\" now." },
-  { trigger: { type: "researchCompleted", nodeId: "cosmic_awareness" }, text: "COSMIC AWARENESS UNLOCKED — Gary sees threads between all things. Says the cat was right about everything." },
+  { trigger: { type: "researchCompleted", nodeId: "parallel_experiments" }, text: "PARALLEL EXPERIMENTS — Gary now thinks about two things at once. Linda says that's an improvement." },
+  { trigger: { type: "researchCompleted", nodeId: "rb_dimensional_awareness" }, text: "DIMENSIONAL AWARENESS COMPLETE — Garage reportedly exists in \"three and a half dimensions\" now." },
+  { trigger: { type: "researchCompleted", nodeId: "convergence_theory" }, text: "CONVERGENCE THEORY UNLOCKED — Gary sees threads between all things. Says the cat was right about everything." },
 
   // ── Lab Expansion Headlines ─────────────────────────────────────────
 
@@ -279,7 +279,7 @@ export const TICKER_HEADLINES: TickerHeadline[] = [
   { trigger: { type: "generatorMilestone", genId: "prototype", count: 35 }, text: "SATELLITE IMAGERY reveals perfect circular heat signature beneath suburban neighborhood." },
   { trigger: { type: "generatorMilestone", genId: "containment", count: 35 }, text: "GOVERNMENT AGENT spotted arguing with unknown individuals outside local residence." },
   { trigger: { type: "generatorMilestone", genId: "mindlink", count: 35 }, text: "LOCAL BOY, 11, submits patent application for 'device he saw in a dream.'" },
-  { trigger: { type: "upgradePurchased", upgradeId: "chemistry_3" }, text: "PHYSICS PROFESSOR relocates across country 'for the air quality,' says absolutely no one believes her." },
+  { trigger: { type: "upgradePurchased", upgradeId: "chemistry_2" }, text: "PHYSICS PROFESSOR relocates across country 'for the air quality,' says absolutely no one believes her." },
   { trigger: { type: "generatorMilestone", genId: "collider", count: 35 }, text: "GEOLOGICAL SURVEY finds bedrock formation beneath suburb dates to 3.2 billion years ago." },
   { trigger: { type: "totalRPReached", amount: 5000000 }, text: "ANONYMOUS TIP leads authorities to sealed underground chamber. Contents: classified." },
   { trigger: { type: "generatorMilestone", genId: "reality", count: 15 }, text: "SEISMOGRAPH at local university records 'impossibly regular' micro-tremors from residential area." },
