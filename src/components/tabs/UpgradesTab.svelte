@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onDestroy } from "svelte";
   import { getState } from "../../stores/game.svelte";
   import { isUpgradeAvailable } from "../../lib/engine/actions";
   import { UPGRADES, type UpgradeCategory } from "../../lib/data/upgrades.data";
@@ -26,78 +26,74 @@
     )
   );
 
-  // Categories that have visible upgrades
-  const activeCats = $derived(
-    categories.filter((cat) => visibleUpgrades.some((u) => u.category === cat.id))
-  );
+  // Build a flat list of all "slides": { catId, catLabel, pageNum, totalCatPages, items }
+  interface Slide {
+    catId: UpgradeCategory;
+    catLabel: string;
+    pageNum: number;
+    totalCatPages: number;
+    items: typeof UPGRADES;
+  }
 
-  let selectedCat = $state<UpgradeCategory>("production");
-  let pageIndex = $state(0);
-
-  // If selected category has no visible upgrades, fallback to first available
-  const effectiveCat = $derived(
-    activeCats.some((c) => c.id === selectedCat)
-      ? selectedCat
-      : activeCats[0]?.id ?? "production"
-  );
-
-  const catUpgrades = $derived(
-    visibleUpgrades.filter((u) => u.category === effectiveCat)
-  );
-
-  const totalPages = $derived(Math.max(1, Math.ceil(catUpgrades.length / PAGE_SIZE)));
-  const safePage = $derived(Math.min(pageIndex, totalPages - 1));
-
-  $effect(() => {
-    if (pageIndex !== safePage) pageIndex = safePage;
+  const slides = $derived.by(() => {
+    const result: Slide[] = [];
+    for (const cat of categories) {
+      const items = visibleUpgrades.filter((u) => u.category === cat.id);
+      if (items.length === 0) continue;
+      const totalCatPages = Math.ceil(items.length / PAGE_SIZE);
+      for (let p = 0; p < totalCatPages; p++) {
+        result.push({
+          catId: cat.id,
+          catLabel: cat.label,
+          pageNum: p,
+          totalCatPages,
+          items: items.slice(p * PAGE_SIZE, (p + 1) * PAGE_SIZE),
+        });
+      }
+    }
+    return result;
   });
 
-  const pageItems = $derived(
-    catUpgrades.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
-  );
+  // Active categories (for tab bar)
+  const activeCats = $derived.by(() => {
+    const seen = new Set<UpgradeCategory>();
+    return categories.filter((cat) => {
+      if (visibleUpgrades.some((u) => u.category === cat.id)) {
+        seen.add(cat.id);
+        return true;
+      }
+      return false;
+    });
+  });
 
-  function selectCat(cat: UpgradeCategory) {
-    selectedCat = cat;
-    pageIndex = 0;
+  // Single flat index into slides
+  let slideIndex = $state(0);
+
+  // Clamp if slides shrink
+  const safeSlide = $derived(Math.max(0, Math.min(slideIndex, slides.length - 1)));
+  $effect(() => { if (slideIndex !== safeSlide) slideIndex = safeSlide; });
+
+  const currentSlide = $derived(slides[safeSlide]);
+
+  // Jump to first slide of a category
+  function selectCat(catId: UpgradeCategory) {
+    const idx = slides.findIndex((s) => s.catId === catId);
+    if (idx >= 0) slideIndex = idx;
   }
 
-  // Current category index within activeCats
-  const catIndex = $derived(
-    Math.max(0, activeCats.findIndex((c) => c.id === effectiveCat))
-  );
-
-  /** Count pages for a given category */
-  function pagesForCat(catId: UpgradeCategory): number {
-    const count = visibleUpgrades.filter((u) => u.category === catId).length;
-    return Math.max(1, Math.ceil(count / PAGE_SIZE));
+  function prev() {
+    if (safeSlide > 0) slideIndex = safeSlide - 1;
   }
 
-  function prevPage() {
-    if (safePage > 0) {
-      pageIndex = safePage - 1;
-    } else if (catIndex > 0) {
-      // First page of category — go to previous category's last page
-      const prevCat = activeCats[catIndex - 1];
-      pageIndex = pagesForCat(prevCat.id) - 1;
-      selectedCat = prevCat.id;
-    }
-  }
-
-  function nextPage() {
-    if (safePage < totalPages - 1) {
-      pageIndex = safePage + 1;
-    } else if (catIndex < activeCats.length - 1) {
-      // Last page of category — go to next category's first page
-      pageIndex = 0;
-      selectedCat = activeCats[catIndex + 1].id;
-    }
+  function next() {
+    if (safeSlide < slides.length - 1) slideIndex = safeSlide + 1;
   }
 
   // ── Swipe / Drag Handling ───────────────────────────────────────────
 
-  let dragStartX = $state(0);
-  let dragCurrentX = $state(0);
-  let isDragging = $state(false);
+  let dragStartX = 0;
+  let dragCurrentX = 0;
+  let isDragging = false;
 
   function onDocMove(e: PointerEvent) {
     if (!isDragging) return;
@@ -107,8 +103,8 @@
   function onDocUp() {
     if (!isDragging) return;
     const delta = dragCurrentX - dragStartX;
-    if (delta < -SWIPE_THRESHOLD) nextPage();
-    else if (delta > SWIPE_THRESHOLD) prevPage();
+    if (delta < -SWIPE_THRESHOLD) next();
+    else if (delta > SWIPE_THRESHOLD) prev();
     isDragging = false;
     document.removeEventListener("pointermove", onDocMove);
     document.removeEventListener("pointerup", onDocUp);
@@ -130,22 +126,25 @@
   let wheelCooldown = false;
 
   function handleWheel(e: WheelEvent) {
-    if (totalPages <= 1) return;
+    if (slides.length <= 1) return;
     if (wheelCooldown) return;
     if (Math.abs(e.deltaY) < 10) return;
     e.preventDefault();
     wheelCooldown = true;
-    if (e.deltaY > 0) nextPage();
-    else prevPage();
+    if (e.deltaY > 0) next();
+    else prev();
     setTimeout(() => { wheelCooldown = false; }, 300);
   }
 
-  onMount(() => {
-    listEl?.addEventListener("wheel", handleWheel, { passive: false });
+  // Bind wheel with passive:false via $effect so it rebinds if element changes
+  $effect(() => {
+    const el = listEl;
+    if (!el) return;
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
   });
 
   onDestroy(() => {
-    listEl?.removeEventListener("wheel", handleWheel);
     document.removeEventListener("pointermove", onDocMove);
     document.removeEventListener("pointerup", onDocUp);
   });
@@ -159,17 +158,17 @@
     </span>
   </div>
 
-  {#if activeCats.length === 0}
+  {#if slides.length === 0}
     <div class="empty text-muted">
       No upgrades available yet. Keep producing RP!
     </div>
-  {:else}
+  {:else if currentSlide}
     <!-- Category tabs -->
     <div class="category-bar">
       {#each activeCats as cat (cat.id)}
         <button
           class="cat-btn"
-          class:active={effectiveCat === cat.id}
+          class:active={currentSlide.catId === cat.id}
           onclick={() => selectCat(cat.id)}
         >
           {cat.label}
@@ -178,40 +177,46 @@
       {/each}
     </div>
 
-    <!-- Upgrade list (paginated, swipeable + scrollwheel) -->
+    <!-- Upgrade list -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="upgrade-list"
       bind:this={listEl}
       onpointerdown={onPointerDown}
     >
-      {#each pageItems as upgrade (upgrade.id)}
+      {#each currentSlide.items as upgrade (upgrade.id)}
         <UpgradeRow {upgrade} />
       {/each}
     </div>
 
     <!-- Pagination controls -->
-    {#if totalPages > 1}
+    {#if slides.length > 1}
       <div class="pagination">
-        <button class="page-btn" disabled={safePage === 0} onclick={prevPage}>
+        <button class="page-btn" disabled={safeSlide === 0} onclick={prev}>
           &lsaquo; Prev
         </button>
-        <div class="page-dots">
-          {#each Array(totalPages) as _, i (i)}
-            <button
-              class="page-dot"
-              class:active={i === safePage}
-              onclick={() => (pageIndex = i)}
-              aria-label="Go to page {i + 1}"
-            ></button>
-          {/each}
-        </div>
-        <button class="page-btn" disabled={safePage >= totalPages - 1} onclick={nextPage}>
+        <span class="page-label text-muted">
+          {currentSlide.catLabel}
+          {#if currentSlide.totalCatPages > 1}
+            ({currentSlide.pageNum + 1}/{currentSlide.totalCatPages})
+          {/if}
+        </span>
+        <button class="page-btn" disabled={safeSlide >= slides.length - 1} onclick={next}>
           Next &rsaquo;
         </button>
       </div>
-      <div class="page-number text-muted mono">
-        {safePage + 1} / {totalPages}
+      <div class="page-dots-row">
+        {#each slides as slide, i (i)}
+          {#if i > 0 && slide.catId !== slides[i - 1].catId}
+            <span class="dot-divider"></span>
+          {/if}
+          <button
+            class="page-dot"
+            class:active={i === safeSlide}
+            onclick={() => (slideIndex = i)}
+            aria-label="{slide.catLabel} page {slide.pageNum + 1}"
+          ></button>
+        {/each}
       </div>
     {/if}
   {/if}
@@ -295,6 +300,12 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .upgrade-list:active {
+    cursor: grabbing;
   }
 
   /* ── Pagination ────────────────────────────────────────────────── */
@@ -305,6 +316,12 @@
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-md) 0 var(--space-xs);
+  }
+
+  .page-label {
+    font-size: var(--text-xs);
+    min-width: 100px;
+    text-align: center;
   }
 
   .page-btn {
@@ -330,9 +347,19 @@
     cursor: default;
   }
 
-  .page-dots {
+  .page-dots-row {
     display: flex;
-    gap: var(--space-sm);
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: var(--space-xs) 0 var(--space-sm);
+  }
+
+  .dot-divider {
+    width: 1px;
+    height: 12px;
+    background: var(--border-color);
+    margin: 0 2px;
   }
 
   .page-dot {
@@ -352,12 +379,6 @@
 
   .page-dot:hover:not(.active) {
     background: var(--text-muted);
-  }
-
-  .page-number {
-    text-align: center;
-    font-size: var(--text-xs);
-    padding-bottom: var(--space-xs);
   }
 
   /* ── Mobile ──────────────────────────────────────────────────────── */
