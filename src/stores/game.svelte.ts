@@ -26,6 +26,7 @@ import { doAscension as engineAscension, purchaseAscensionUpgrade, thesisPointsO
 import { getAscensionUpgradeDef } from "../lib/data/ascension.data";
 import { queueTicker, showToast, getActiveEvent, showEvent, dismissEvent } from "./ui.svelte";
 import { getActiveSeasonalContent } from "../lib/data/seasonal.data";
+import { trackEvent, countClick, countGenBuy, countUpgradeBuy, countPrestige, countResearch } from "../lib/analytics/tracker";
 
 // ── Reactive State ──────────────────────────────────────────────────
 // We use $state.raw because Decimal objects break under Svelte's deep proxy.
@@ -83,6 +84,7 @@ export function getIPPerSec() {
 
 export function doClick(): void {
   handleClick(state);
+  countClick();
   checkTickerTriggers();
   checkPoolTickers();
   checkNoteUnlocks();
@@ -93,6 +95,8 @@ export function doClick(): void {
 
 export function buyGenerator(id: string, amount: number): void {
   purchaseGenerator(state, id, amount);
+  countGenBuy();
+  trackEvent("buy_generator", { id, amount });
   checkTickerTriggers();
   checkPoolTickers();
   checkNoteUnlocks();
@@ -103,8 +107,10 @@ export function buyGenerator(id: string, amount: number): void {
 export function buyUpgrade(id: string): boolean {
   const success = purchaseUpgrade(state, id);
   if (success) {
+    countUpgradeBuy();
+    trackEvent("buy_upgrade", { id });
     checkTickerTriggers();
-  checkPoolTickers();
+    checkPoolTickers();
     checkEvents();
     notify();
   }
@@ -112,8 +118,17 @@ export function buyUpgrade(id: string): boolean {
 }
 
 export function doPrestigeAction(): Decimal | null {
+  const runTime = state.currentRunTimeSec;
   const result = enginePrestige(state);
   if (result) {
+    countPrestige();
+    trackEvent("prestige", {
+      bpEarned: result.toNumber(),
+      runTimeSec: runTime,
+      prestigeCount: state.prestigeCount,
+      archetype: state.madness.dominantArchetype,
+    });
+
     // Check if a challenge was completed during this prestige
     const completedId = getLastCompletedChallenge();
     if (completedId) {
@@ -147,6 +162,8 @@ export function buyPrestigeUpgrade(id: string): boolean {
 export function doStartResearch(nodeId: string): boolean {
   const success = startResearch(state, nodeId);
   if (success) {
+    countResearch();
+    trackEvent("start_research", { nodeId });
     notify();
   }
   return success;
@@ -186,6 +203,7 @@ export function doSpecialize(): boolean {
   if (success) {
     const arch = state.specialization.archetype!;
     const name = arch.charAt(0).toUpperCase() + arch.slice(1);
+    trackEvent("specialize", { archetype: arch });
     showToast(`Specialized as ${name}!`, 4000);
     queueTicker(`SPECIALIZATION ACTIVATED: Gary has embraced the ${name} path. There's no going back. (Until prestige.)`);
     notify();
@@ -210,10 +228,10 @@ export function buySpecUpgrade(upgradeId: string): boolean {
 // ── Lab Expansion Actions ───────────────────────────────────────────
 
 export function doLabExpansion(): boolean {
-  const oldLevel = state.labLevel;
   const success = purchaseLabExpansion(state);
   if (success) {
     const name = labLevelName(state.labLevel);
+    trackEvent("lab_expansion", { level: state.labLevel, name });
     showToast(`Lab expanded: ${name}!`, 5000);
     queueTicker(`LAB EXPANSION: Gary has expanded to ${name}. The neighbors have questions.`);
     notify();
@@ -231,6 +249,10 @@ export function getPendingTP() {
 export function doAscensionAction(): Decimal | null {
   const result = engineAscension(state);
   if (result) {
+    trackEvent("ascension", {
+      tpEarned: result.toNumber(),
+      ascensionCount: state.ascensionCount,
+    });
     showToast(`Ascended! Earned ${result.toFixed(0)} Thesis Points.`, 5000);
     queueTicker(`ASCENSION COMPLETE: Gary's thesis has been accepted. By the universe itself.`);
     firedPoolMilestones.clear();
@@ -302,6 +324,7 @@ export function doStartChallenge(challengeId: string): boolean {
   // NOW set the challenge active
   state.activeChallenge = challengeId;
 
+  trackEvent("start_challenge", { challengeId, name: cDef.name });
   showToast(`Challenge Started: ${cDef.name}`, 4000);
   queueTicker(`CHALLENGE ACCEPTED: "${cDef.name}" — ${cDef.description}`);
   firedPoolMilestones.clear();
@@ -629,6 +652,7 @@ export function resolveEvent(choiceIndex: number): void {
   const active = getActiveEvent();
   if (!active) return;
 
+  trackEvent("event_choice", { eventId: active.eventId, choiceIndex });
   const result = applyEventChoice(state, active.eventId, choiceIndex);
 
   // Process side effects

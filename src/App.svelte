@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from "svelte";
   import { initGame, doTick, doSave, doClick, getState } from "./stores/game.svelte";
   import { initMusic } from "./lib/audio/music";
+  import { initAnalytics, shutdownAnalytics } from "./lib/analytics/tracker";
   import { getActiveTab, setActiveTab, setOfflineMessage, getOfflineMessage, flashSaveIndicator, getActiveEvent, type GameTab } from "./stores/ui.svelte";
 
   import Header from "./components/layout/Header.svelte";
@@ -68,6 +69,9 @@
     // Initialize music (auto-starts on first user interaction)
     initMusic();
 
+    // Initialize analytics tracking
+    initAnalytics(getState);
+
     // Start game loop — synced to display refresh (typically 60fps)
     lastTickTime = performance.now();
     rafId = requestAnimationFrame(tick);
@@ -76,6 +80,7 @@
   onDestroy(() => {
     running = false;
     if (rafId != null) cancelAnimationFrame(rafId);
+    shutdownAnalytics();
     doSave(); // Save on close
   });
 
