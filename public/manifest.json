@@ -1,0 +1,18 @@
+{
+  "name": "Click, For Science!",
+  "short_name": "Click4Science",
+  "description": "An idle clicker game about a normal guy in his garage who slowly becomes a mad scientist.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#1a1d27",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

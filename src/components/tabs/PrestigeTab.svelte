@@ -1375,6 +1375,10 @@
   }
 
   @media (max-width: 600px) {
+    .prestige-tab {
+      padding: var(--space-sm);
+    }
+
     .bp-display {
       flex-direction: column;
       gap: var(--space-md);
@@ -1393,6 +1397,7 @@
       flex-direction: row;
       justify-content: center;
       gap: var(--space-sm);
+      min-height: 44px;
     }
 
     .challenge-card-footer {
@@ -1402,6 +1407,28 @@
 
     .challenge-start-btn {
       width: 100%;
+      min-height: 44px;
+    }
+
+    /* Confirm dialogs */
+    .confirm-dialog {
+      max-width: calc(100vw - 32px);
+      padding: var(--space-md);
+    }
+
+    .confirm-details {
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .confirm-actions {
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .confirm-actions button {
+      width: 100%;
+      min-height: 44px;
     }
   }
 </style>

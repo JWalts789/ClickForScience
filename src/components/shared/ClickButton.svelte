@@ -34,6 +34,11 @@
     isClicking = true;
     setTimeout(() => { isClicking = false; }, 100);
 
+    // Haptic feedback on mobile
+    if (navigator.vibrate) {
+      navigator.vibrate(15);
+    }
+
     // Spawn floating number near the click position relative to the button
     const btn = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = e.clientX - btn.left;

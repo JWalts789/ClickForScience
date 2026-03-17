@@ -94,4 +94,20 @@
     85% { opacity: 1; }
     100% { opacity: 0; }
   }
+
+  @media (max-width: 600px) {
+    .ticker-bar {
+      bottom: 56px;
+      height: 24px;
+    }
+
+    .ticker-label {
+      font-size: 0.6rem;
+      padding: 0 var(--space-xs);
+    }
+
+    .ticker-text {
+      font-size: 0.65rem;
+    }
+  }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { getState, getIPPerSec, getRevision, doStartResearch, doCancelResearch, doLabExpansion } from "../../stores/game.svelte";
   import { formatNumber, formatRate } from "../../lib/utils/format";
   import { formatTime } from "../../lib/utils/time";
@@ -16,12 +16,35 @@
   const ipPerSec = $derived(getIPPerSec());
 
   // ── Tree Layout Constants ──────────────────────────────────────────
-  const CELL_W = 180;
-  const CELL_H = 200;
-  const NODE_W = 158;
-  const NODE_H = 105;
-  const PADDING = 50;
-  const DETAIL_H = 280;
+  // Detect mobile for scaled-down tree
+  let isMobile = $state(false);
+
+  function checkMobile() {
+    isMobile = window.innerWidth <= 600;
+  }
+
+  onDestroy(() => {
+    window.removeEventListener("resize", checkMobile);
+  });
+
+  const CELL_W_DESKTOP = 180;
+  const CELL_H_DESKTOP = 200;
+  const NODE_W_DESKTOP = 158;
+  const NODE_H_DESKTOP = 105;
+  const PADDING_DESKTOP = 50;
+
+  const CELL_W_MOBILE = 110;
+  const CELL_H_MOBILE = 130;
+  const NODE_W_MOBILE = 96;
+  const NODE_H_MOBILE = 72;
+  const PADDING_MOBILE = 24;
+
+  const CELL_W = $derived(isMobile ? CELL_W_MOBILE : CELL_W_DESKTOP);
+  const CELL_H = $derived(isMobile ? CELL_H_MOBILE : CELL_H_DESKTOP);
+  const NODE_W = $derived(isMobile ? NODE_W_MOBILE : NODE_W_DESKTOP);
+  const NODE_H = $derived(isMobile ? NODE_H_MOBILE : NODE_H_DESKTOP);
+  const PADDING = $derived(isMobile ? PADDING_MOBILE : PADDING_DESKTOP);
+  const DETAIL_H = $derived(isMobile ? 220 : 280);
 
   let selectedNode = $state<ResearchNodeDef | null>(null);
 
@@ -217,6 +240,8 @@
   }
 
   onMount(() => {
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
     if (containerEl) {
       const centerCol = 10;
       containerEl.scrollLeft = Math.max(0, centerCol * CELL_W - containerEl.clientWidth / 2);
@@ -1173,25 +1198,138 @@
 
   @media (max-width: 600px) {
     .research-tab {
-      padding: var(--space-sm);
+      padding: var(--space-xs);
     }
 
     .ip-header {
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
+      gap: var(--space-xs);
+      padding: var(--space-xs) var(--space-sm);
+    }
+
+    .ip-value {
+      font-size: var(--text-lg);
+    }
+
+    .ip-divider {
+      height: 20px;
     }
 
     .tree-viewport {
-      height: 420px;
+      height: 380px;
+      touch-action: pan-x pan-y;
+      border-radius: var(--radius-sm);
     }
 
+    .corkboard-sub {
+      font-size: 10px;
+    }
+
+    /* Smaller nodes on mobile */
+    .node-title {
+      font-size: 9px;
+      padding: 4px 5px 1px;
+      line-height: 1.2;
+    }
+
+    .node-badges {
+      padding: 0 5px;
+      gap: 2px;
+    }
+
+    .nbadge {
+      font-size: 6px;
+      padding: 0 3px;
+    }
+
+    .node-effect {
+      font-size: 7px;
+      padding: 2px 5px 0;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+    }
+
+    .node-cost {
+      font-size: 7px;
+      padding: 2px 5px 4px;
+    }
+
+    .node-top-bar {
+      height: 2px;
+    }
+
+    /* Tier labels */
+    .tier-tag {
+      left: 3px;
+      gap: 3px;
+    }
+
+    .tier-num {
+      font-size: 8px;
+      padding: 0 3px;
+    }
+
+    .tier-text {
+      display: none;
+    }
+
+    /* Detail panel constrained to viewport */
     .detail-panel {
-      width: 280px;
+      position: fixed !important;
+      left: 8px !important;
+      right: 8px !important;
+      bottom: 8px !important;
+      top: auto !important;
+      width: auto !important;
+      max-height: 55vh;
+      overflow-y: auto;
+      z-index: 200;
+      border-radius: 12px;
+      animation: dp-slide-up 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
+    .dp-arrow {
+      display: none;
+    }
+
+    .dp-close {
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .dp-start {
+      min-height: 48px;
+      font-size: var(--text-base);
+    }
+
+    .dp-grid {
+      font-size: 10px;
+    }
+
+    /* Active research bar */
+    .cancel-btn {
+      min-height: 36px;
+      min-width: 44px;
+      padding: 4px 12px;
+      font-size: var(--text-xs);
+    }
+
+    /* Lab section */
     .lab-next-header {
       flex-direction: column;
       align-items: stretch;
     }
+
+    .lab-expand-btn {
+      min-height: 44px;
+    }
+  }
+
+  @keyframes dp-slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 </style>
