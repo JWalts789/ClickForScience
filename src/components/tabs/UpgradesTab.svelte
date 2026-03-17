@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
   import { getState } from "../../stores/game.svelte";
   import { isUpgradeAvailable } from "../../lib/engine/actions";
   import { UPGRADES, type UpgradeCategory } from "../../lib/data/upgrades.data";
   import UpgradeRow from "../shared/UpgradeRow.svelte";
+
+  const PAGE_SIZE = 7;
 
   const state = $derived(getState());
 
@@ -23,95 +24,48 @@
     )
   );
 
-  function upgradesInCategory(cat: UpgradeCategory) {
-    return visibleUpgrades.filter((u) => u.category === cat);
-  }
-
-  // Pages: one per category that has visible upgrades
-  const pages = $derived(
-    categories
-      .map((cat) => ({ ...cat, items: upgradesInCategory(cat.id) }))
-      .filter((p) => p.items.length > 0)
+  // Categories that have visible upgrades
+  const activeCats = $derived(
+    categories.filter((cat) => visibleUpgrades.some((u) => u.category === cat.id))
   );
 
-  const totalPages = $derived(Math.max(1, pages.length));
+  let selectedCat = $state<UpgradeCategory>("production");
+  let pageIndex = $state(0);
 
-  let currentPage = $state(0);
+  // If selected category has no visible upgrades, fallback to first available
+  const effectiveCat = $derived(
+    activeCats.some((c) => c.id === selectedCat)
+      ? selectedCat
+      : activeCats[0]?.id ?? "production"
+  );
 
-  const safePage = $derived(Math.min(currentPage, totalPages - 1));
+  const catUpgrades = $derived(
+    visibleUpgrades.filter((u) => u.category === effectiveCat)
+  );
+
+  const totalPages = $derived(Math.max(1, Math.ceil(catUpgrades.length / PAGE_SIZE)));
+  const safePage = $derived(Math.min(pageIndex, totalPages - 1));
+
   $effect(() => {
-    if (currentPage !== safePage) currentPage = safePage;
+    if (pageIndex !== safePage) pageIndex = safePage;
   });
 
-  function goToPage(page: number) {
-    currentPage = Math.max(0, Math.min(page, totalPages - 1));
+  const pageItems = $derived(
+    catUpgrades.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
+  );
+
+  function selectCat(cat: UpgradeCategory) {
+    selectedCat = cat;
+    pageIndex = 0;
   }
 
-  // ── Swipe / Drag Handling ───────────────────────────────────────────
-
-  const SWIPE_THRESHOLD = 50;
-
-  let dragStartX = $state(0);
-  let dragCurrentX = $state(0);
-  let isDragging = $state(false);
-  const dragOffset = $derived(isDragging ? dragCurrentX - dragStartX : 0);
-
-  function onDocMove(e: PointerEvent) {
-    if (!isDragging) return;
-    dragCurrentX = e.clientX;
+  function prevPage() {
+    if (safePage > 0) pageIndex = safePage - 1;
   }
 
-  function onDocUp(_e: PointerEvent) {
-    if (!isDragging) return;
-    const delta = dragCurrentX - dragStartX;
-    if (delta < -SWIPE_THRESHOLD && currentPage < totalPages - 1) {
-      goToPage(currentPage + 1);
-    } else if (delta > SWIPE_THRESHOLD && currentPage > 0) {
-      goToPage(currentPage - 1);
-    }
-    isDragging = false;
-    dragStartX = 0;
-    dragCurrentX = 0;
-    document.removeEventListener("pointermove", onDocMove);
-    document.removeEventListener("pointerup", onDocUp);
+  function nextPage() {
+    if (safePage < totalPages - 1) pageIndex = safePage + 1;
   }
-
-  function onPointerDown(e: PointerEvent) {
-    // Don't start drag on buttons/inputs
-    const target = e.target as HTMLElement;
-    if (target.closest("button, input")) return;
-
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragCurrentX = e.clientX;
-    document.addEventListener("pointermove", onDocMove);
-    document.addEventListener("pointerup", onDocUp);
-  }
-
-  // ── Mouse Wheel Paging ─────────────────────────────────────────────
-  let viewportEl = $state<HTMLDivElement | undefined>();
-  let wheelCooldown = false;
-
-  function handleWheel(e: WheelEvent) {
-    if (wheelCooldown) return;
-    if (Math.abs(e.deltaY) < 10) return;
-    e.preventDefault();
-    wheelCooldown = true;
-    if (e.deltaY > 0 && currentPage < totalPages - 1) {
-      goToPage(currentPage + 1);
-    } else if (e.deltaY < 0 && currentPage > 0) {
-      goToPage(currentPage - 1);
-    }
-    setTimeout(() => { wheelCooldown = false; }, 300);
-  }
-
-  onMount(() => {
-    viewportEl?.addEventListener("wheel", handleWheel, { passive: false });
-  });
-
-  onDestroy(() => {
-    viewportEl?.removeEventListener("wheel", handleWheel);
-  });
 </script>
 
 <div class="upgrades-tab">
@@ -122,62 +76,51 @@
     </span>
   </div>
 
-  {#if pages.length === 0}
+  {#if activeCats.length === 0}
     <div class="empty text-muted">
       No upgrades available yet. Keep producing RP!
     </div>
   {:else}
     <!-- Category tabs -->
     <div class="category-bar">
-      {#each pages as page, i (page.id)}
+      {#each activeCats as cat (cat.id)}
         <button
           class="cat-btn"
-          class:active={i === safePage}
-          onclick={() => goToPage(i)}
+          class:active={effectiveCat === cat.id}
+          onclick={() => selectCat(cat.id)}
         >
-          {page.label}
-          <span class="cat-count">{page.items.length}</span>
+          {cat.label}
+          <span class="cat-count">{visibleUpgrades.filter((u) => u.category === cat.id).length}</span>
         </button>
       {/each}
     </div>
 
-    <!-- Swipe container -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-      class="swipe-viewport"
-      role="region"
-      aria-label="Upgrade pages"
-      onpointerdown={onPointerDown}
-      bind:this={viewportEl}
-    >
-      <div
-        class="swipe-track"
-        class:dragging={isDragging}
-        style:transform="translateX(calc({-safePage * 100}% + {dragOffset}px))"
-      >
-        {#each pages as page (page.id)}
-          <div class="swipe-page">
-            <div class="upgrade-list">
-              {#each page.items as upgrade (upgrade.id)}
-                <UpgradeRow {upgrade} />
-              {/each}
-            </div>
-          </div>
-        {/each}
-      </div>
+    <!-- Upgrade list (paginated) -->
+    <div class="upgrade-list">
+      {#each pageItems as upgrade (upgrade.id)}
+        <UpgradeRow {upgrade} />
+      {/each}
     </div>
 
-    <!-- Page indicator dots -->
+    <!-- Pagination controls -->
     {#if totalPages > 1}
-      <div class="page-indicators">
-        {#each Array(totalPages) as _, i (i)}
-          <button
-            class="page-dot"
-            class:active={i === safePage}
-            onclick={() => goToPage(i)}
-            aria-label="Go to page {i + 1}"
-          ></button>
-        {/each}
+      <div class="pagination">
+        <button class="page-btn" disabled={safePage === 0} onclick={prevPage}>
+          &lsaquo; Prev
+        </button>
+        <div class="page-dots">
+          {#each Array(totalPages) as _, i (i)}
+            <button
+              class="page-dot"
+              class:active={i === safePage}
+              onclick={() => (pageIndex = i)}
+              aria-label="Go to page {i + 1}"
+            ></button>
+          {/each}
+        </div>
+        <button class="page-btn" disabled={safePage >= totalPages - 1} onclick={nextPage}>
+          Next &rsaquo;
+        </button>
       </div>
       <div class="page-number text-muted mono">
         {safePage + 1} / {totalPages}
@@ -191,7 +134,6 @@
     max-width: 800px;
     margin: 0 auto;
     padding: var(--space-md) var(--space-lg);
-    user-select: none;
   }
 
   .upgrades-header {
@@ -259,47 +201,50 @@
     background: rgba(199, 146, 234, 0.25);
   }
 
-  /* ── Swipe Carousel ──────────────────────────────────────────────── */
-
-  .swipe-viewport {
-    overflow: hidden;
-    touch-action: pan-y;
-    cursor: grab;
-  }
-
-  .swipe-viewport:active {
-    cursor: grabbing;
-  }
-
-  .swipe-track {
-    display: flex;
-    transition: transform 300ms ease;
-    will-change: transform;
-  }
-
-  .swipe-track.dragging {
-    transition: none;
-  }
-
-  .swipe-page {
-    flex: 0 0 100%;
-    min-width: 0;
-  }
+  /* ── Upgrade List ──────────────────────────────────────────────── */
 
   .upgrade-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
-    padding: 0 var(--space-xs);
   }
 
-  /* ── Page Indicators ─────────────────────────────────────────────── */
+  /* ── Pagination ────────────────────────────────────────────────── */
 
-  .page-indicators {
+  .pagination {
     display: flex;
     justify-content: center;
-    gap: var(--space-sm);
+    align-items: center;
+    gap: var(--space-md);
     padding: var(--space-md) 0 var(--space-xs);
+  }
+
+  .page-btn {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 60px;
+  }
+
+  .page-btn:hover:not(:disabled) {
+    border-color: var(--color-rp);
+    color: var(--color-rp);
+  }
+
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .page-dots {
+    display: flex;
+    gap: var(--space-sm);
   }
 
   .page-dot {
@@ -332,6 +277,11 @@
   @media (max-width: 600px) {
     .upgrades-tab {
       padding: var(--space-sm) var(--space-sm);
+    }
+
+    .page-btn {
+      min-width: 50px;
+      padding: var(--space-xs) var(--space-xs);
     }
   }
 </style>
