@@ -61,12 +61,29 @@
     pageIndex = 0;
   }
 
+  // Current category index within activeCats
+  const catIndex = $derived(
+    Math.max(0, activeCats.findIndex((c) => c.id === effectiveCat))
+  );
+
   function prevPage() {
-    if (safePage > 0) pageIndex = safePage - 1;
+    if (safePage > 0) {
+      pageIndex = safePage - 1;
+    } else if (catIndex > 0) {
+      // First page of category — go to previous category's last page
+      selectedCat = activeCats[catIndex - 1].id;
+      pageIndex = 9999; // will be clamped to last page by safePage
+    }
   }
 
   function nextPage() {
-    if (safePage < totalPages - 1) pageIndex = safePage + 1;
+    if (safePage < totalPages - 1) {
+      pageIndex = safePage + 1;
+    } else if (catIndex < activeCats.length - 1) {
+      // Last page of category — go to next category's first page
+      selectedCat = activeCats[catIndex + 1].id;
+      pageIndex = 0;
+    }
   }
 
   // ── Swipe / Drag Handling ───────────────────────────────────────────
