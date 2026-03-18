@@ -42,10 +42,11 @@
 
   let showConfirmDialog = $state(false);
 
-  const tiers: { tier: 1 | 2 | 3; label: string }[] = [
+  const tiers: { tier: 1 | 2 | 3 | 4; label: string }[] = [
     { tier: 1, label: "Early Breakthroughs" },
     { tier: 2, label: "Deeper Insights" },
     { tier: 3, label: "Transcendent Science" },
+    { tier: 4, label: "Beyond the Breakthrough" },
   ];
 
   const visibleUpgrades = $derived(
