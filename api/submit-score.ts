@@ -1,7 +1,18 @@
-// Vercel Edge Function — score submission with anti-cheat validation.
-// Deploy alongside the Vite static build on Vercel.
+// Vercel Edge Function — score submission with HMAC signing, anti-cheat,
+// origin validation, input sanitization, and DB-backed rate limiting.
 
 import { createClient } from "@supabase/supabase-js";
+import {
+  validateOrigin,
+  handlePreflight,
+  jsonResponse,
+  verifySignature,
+  sanitizePlayerName,
+  isValidUUID,
+  clampFinite,
+  VALID_ARCHETYPES,
+  VALID_CATEGORIES,
+} from "./_shared";
 
 interface ScorePayload {
   playerId: string;
@@ -13,154 +24,192 @@ interface ScorePayload {
   archetype: string | null;
   totalPlaytimeSec: number;
   prestigeCount: number;
-  timestamp: number;
 }
-
-const VALID_CATEGORIES = [
-  "totalRPAllTime",
-  "fastestPrestige",
-  "ascensionCount",
-  "madnessLevel",
-  "challengesCompleted",
-  "clickCount",
-];
-
-// Rate limit: one submission per player per category per 60 seconds
-const rateLimitMap = new Map<string, number>();
-const RATE_LIMIT_MS = 60_000;
 
 export const config = { runtime: "edge" };
 
 export default async function handler(req: Request): Promise<Response> {
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
+  // ── CORS ──────────────────────────────────────────────────────────
+  const origin = validateOrigin(req);
+  if (!origin) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
       headers: { "Content-Type": "application/json" },
     });
   }
 
+  if (req.method === "OPTIONS") {
+    return handlePreflight(origin);
+  }
+
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, 405, origin);
+  }
+
+  // ── Server config ─────────────────────────────────────────────────
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const hmacSecret = process.env.HMAC_SECRET;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return new Response(
-      JSON.stringify({ error: "Server misconfigured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+  if (!supabaseUrl || !supabaseServiceKey || !hmacSecret) {
+    return jsonResponse({ error: "Server misconfigured" }, 500, origin);
   }
 
+  // ── Read body (needed for HMAC verification) ──────────────────────
+  const bodyText = await req.text();
+
+  // ── Verify HMAC signature ─────────────────────────────────────────
+  const sigResult = await verifySignature(req, bodyText, hmacSecret);
+  if (!sigResult.valid) {
+    return jsonResponse({ error: sigResult.error ?? "Unauthorized" }, 401, origin);
+  }
+
+  // ── Parse payload ─────────────────────────────────────────────────
   let payload: ScorePayload;
   try {
-    payload = await req.json();
+    payload = JSON.parse(bodyText);
   } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON" }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: "Invalid JSON" }, 400, origin);
   }
 
-  // ── Validate fields ──────────────────────────────────────────────
+  // ── Validate fields ───────────────────────────────────────────────
 
-  if (!payload.playerId || typeof payload.playerId !== "string") {
-    return error("Missing playerId");
-  }
-  if (!payload.playerName || typeof payload.playerName !== "string" || payload.playerName.trim().length === 0) {
-    return error("Missing playerName");
-  }
-  if (!VALID_CATEGORIES.includes(payload.category)) {
-    return error("Invalid category");
-  }
-  if (typeof payload.value !== "number" || !isFinite(payload.value)) {
-    return error("Invalid value");
-  }
-  if (payload.playerName.length > 24) {
-    return error("Name too long");
+  if (!payload.playerId || !isValidUUID(payload.playerId)) {
+    return jsonResponse({ error: "Invalid playerId" }, 400, origin);
   }
 
-  // ── Rate limit ───────────────────────────────────────────────────
-
-  const rlKey = `${payload.playerId}:${payload.category}`;
-  const lastSubmit = rateLimitMap.get(rlKey) ?? 0;
-  if (Date.now() - lastSubmit < RATE_LIMIT_MS) {
-    return error("Too many submissions. Please wait a minute.", 429);
+  if (!payload.playerName || typeof payload.playerName !== "string") {
+    return jsonResponse({ error: "Missing playerName" }, 400, origin);
   }
-  rateLimitMap.set(rlKey, Date.now());
 
-  // ── Anti-cheat sanity checks ─────────────────────────────────────
+  const playerName = sanitizePlayerName(payload.playerName);
+  if (playerName.length === 0) {
+    return jsonResponse({ error: "Invalid playerName" }, 400, origin);
+  }
+
+  if (!VALID_CATEGORIES.has(payload.category)) {
+    return jsonResponse({ error: "Invalid category" }, 400, origin);
+  }
+
+  // Numeric bounds validation
+  const value = clampFinite(payload.value, -1e308, 1e308);
+  if (value === null) {
+    return jsonResponse({ error: "Invalid value" }, 400, origin);
+  }
+
+  const valueMantissa = clampFinite(payload.valueMantissa, 0, 10);
+  const valueExponent = clampFinite(payload.valueExponent, 0, 999);
+  const totalPlaytimeSec = clampFinite(payload.totalPlaytimeSec, 0, 1e9);
+  const prestigeCount = clampFinite(payload.prestigeCount, 0, 1e6);
+
+  if (valueMantissa === null || valueExponent === null || totalPlaytimeSec === null || prestigeCount === null) {
+    return jsonResponse({ error: "Invalid numeric fields" }, 400, origin);
+  }
+
+  // Validate archetype
+  const archetype = payload.archetype;
+  if (archetype !== null && !VALID_ARCHETYPES.has(archetype)) {
+    return jsonResponse({ error: "Invalid archetype" }, 400, origin);
+  }
+
+  // ── DB-backed rate limiting ───────────────────────────────────────
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const RATE_LIMIT_SEC = 60;
+
+  const { data: recentSubmission } = await supabase
+    .from("rate_limits")
+    .select("last_attempt")
+    .eq("key", `score:${payload.playerId}:${payload.category}`)
+    .maybeSingle();
+
+  if (recentSubmission) {
+    const elapsed = (Date.now() - new Date(recentSubmission.last_attempt).getTime()) / 1000;
+    if (elapsed < RATE_LIMIT_SEC) {
+      return jsonResponse(
+        { error: `Too many submissions. Wait ${Math.ceil(RATE_LIMIT_SEC - elapsed)}s.` },
+        429,
+        origin
+      );
+    }
+  }
+
+  // Update rate limit timestamp
+  await supabase.from("rate_limits").upsert(
+    { key: `score:${payload.playerId}:${payload.category}`, last_attempt: new Date().toISOString() },
+    { onConflict: "key" }
+  );
+
+  // ── Anti-cheat sanity checks (ENFORCED — reject flagged scores) ──
 
   const flags: string[] = [];
 
-  // Check: playtime vs value plausibility
-  if (payload.category === "totalRPAllTime") {
-    // At max, even with all multipliers, RP/sec shouldn't exceed ~1e30 per second of play
-    // This is a very generous sanity ceiling
-    if (payload.valueExponent > 0) {
-      const logValue = Math.log10(payload.valueMantissa) + payload.valueExponent;
-      const maxLogRP = Math.log10(Math.max(payload.totalPlaytimeSec, 1)) + 35;
-      if (logValue > maxLogRP) {
-        flags.push("rp_exceeds_playtime_ceiling");
-      }
+  if (payload.category === "totalRPAllTime" && valueExponent > 0) {
+    const logValue = Math.log10(Math.max(valueMantissa, 0.1)) + valueExponent;
+    const maxLogRP = Math.log10(Math.max(totalPlaytimeSec, 1)) + 35;
+    if (logValue > maxLogRP) {
+      flags.push("rp_exceeds_playtime_ceiling");
     }
   }
 
-  if (payload.category === "fastestPrestige") {
-    // Fastest prestige under 30 seconds is suspicious
-    if (payload.value < 30) {
-      flags.push("prestige_suspiciously_fast");
+  if (payload.category === "fastestPrestige" && value < 30) {
+    flags.push("prestige_suspiciously_fast");
+  }
+
+  if (payload.category === "clickCount" && totalPlaytimeSec > 0) {
+    const clicksPerSec = value / totalPlaytimeSec;
+    if (clicksPerSec > 20) {
+      flags.push("click_rate_suspicious");
     }
   }
 
-  if (payload.category === "clickCount") {
-    // More than 20 clicks/second average is suspicious
-    if (payload.totalPlaytimeSec > 0) {
-      const clicksPerSec = payload.value / payload.totalPlaytimeSec;
-      if (clicksPerSec > 20) {
-        flags.push("click_rate_suspicious");
-      }
-    }
+  // ENFORCE: reject flagged submissions
+  if (flags.length > 0) {
+    console.warn("Anti-cheat rejection:", payload.playerId, flags);
+    return jsonResponse(
+      { error: "Score flagged as suspicious", flags },
+      403,
+      origin
+    );
   }
 
-  // ── Upsert to Supabase ──────────────────────────────────────────
+  // ── Upsert to Supabase ────────────────────────────────────────────
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+  const now = new Date().toISOString(); // Server-side timestamp only
   const row = {
     player_id: payload.playerId,
-    player_name: payload.playerName.trim().slice(0, 24),
+    player_name: playerName,
     category: payload.category,
-    value: payload.value,
-    value_mantissa: payload.valueMantissa,
-    value_exponent: payload.valueExponent,
-    archetype: payload.archetype,
-    total_playtime_sec: payload.totalPlaytimeSec,
-    prestige_count: payload.prestigeCount,
-    flags: flags.length > 0 ? flags : null,
-    submitted_at: new Date().toISOString(),
+    value,
+    value_mantissa: valueMantissa,
+    value_exponent: valueExponent,
+    archetype,
+    total_playtime_sec: totalPlaytimeSec,
+    prestige_count: prestigeCount,
+    flags: null, // Clean submission
+    submitted_at: now,
   };
 
-  // Upsert: update if this player+category already exists, only if new value is better
+  // Check existing score — only update if better
   const isAsc = payload.category === "fastestPrestige";
 
-  // First check existing
   const { data: existing } = await supabase
     .from("leaderboard")
     .select("value, value_exponent")
     .eq("player_id", payload.playerId)
     .eq("category", payload.category)
-    .single();
+    .maybeSingle();
 
   let shouldUpdate = true;
   if (existing) {
     if (isAsc) {
-      // For "fastest", lower is better
-      shouldUpdate = payload.value < existing.value;
+      shouldUpdate = value < existing.value;
     } else {
-      // For others, higher is better — compare using exponent first, then value
       const existingExp = existing.value_exponent ?? 0;
-      if (payload.valueExponent > existingExp) {
+      if (valueExponent > existingExp) {
         shouldUpdate = true;
-      } else if (payload.valueExponent === existingExp) {
-        shouldUpdate = payload.value > existing.value;
+      } else if (valueExponent === existingExp) {
+        shouldUpdate = value > existing.value;
       } else {
         shouldUpdate = false;
       }
@@ -174,27 +223,13 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (dbError) {
       console.error("Supabase upsert error:", dbError);
-      return error("Database error", 500);
+      return jsonResponse({ error: "Database error" }, 500, origin);
     }
 
-    // Also upsert weekly table
     await supabase
       .from("leaderboard_weekly")
-      .upsert(
-        { ...row },
-        { onConflict: "player_id,category" }
-      );
+      .upsert({ ...row }, { onConflict: "player_id,category" });
   }
 
-  return new Response(
-    JSON.stringify({ success: true, flags: flags.length > 0 ? flags : undefined }),
-    { status: 200, headers: { "Content-Type": "application/json" } }
-  );
-}
-
-function error(message: string, status: number = 400): Response {
-  return new Response(
-    JSON.stringify({ error: message }),
-    { status, headers: { "Content-Type": "application/json" } }
-  );
+  return jsonResponse({ success: true }, 200, origin);
 }

@@ -1,5 +1,6 @@
 // ── Leaderboard Client ─────────────────────────────────────────────
 // Talks to Supabase for reads, Vercel Edge Function for writes.
+// All write requests are HMAC-signed.
 
 import { createClient } from "@supabase/supabase-js";
 import type {
@@ -9,6 +10,7 @@ import type {
   LeaderboardResponse,
 } from "./types";
 import { getPlayerId, getPlayerName } from "./identity";
+import { signedFetch } from "../security/hmac";
 
 // ── Supabase Setup ────────────────────────────────────────────────
 // These are public (anon) keys — safe to expose in client code.
@@ -21,6 +23,16 @@ const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY
     ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
     : null;
+
+// ── Valid categories (whitelist for filter injection prevention) ────
+const VALID_CATEGORIES: Set<string> = new Set([
+  "totalRPAllTime",
+  "fastestPrestige",
+  "ascensionCount",
+  "madnessLevel",
+  "challengesCompleted",
+  "clickCount",
+]);
 
 // ── Fetch Leaderboard ─────────────────────────────────────────────
 
@@ -82,7 +94,7 @@ export async function fetchLeaderboard(
 }
 
 // ── Submit Score ──────────────────────────────────────────────────
-// Scores are submitted through the Vercel Edge Function for validation.
+// Scores are submitted through the Vercel Edge Function with HMAC signing.
 
 export async function submitScore(
   category: LeaderboardCategory,
@@ -111,14 +123,9 @@ export async function submitScore(
       archetype,
       totalPlaytimeSec,
       prestigeCount,
-      timestamp: Date.now(),
     };
 
-    const response = await fetch("/api/submit-score", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await signedFetch("/api/submit-score", payload);
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({ error: "Unknown error" }));
@@ -140,6 +147,7 @@ export function isLeaderboardAvailable(): boolean {
 // ── Realtime Subscription ─────────────────────────────────────────
 // Subscribe to INSERT/UPDATE on a leaderboard table+category.
 // Calls `onChange` whenever any player's score changes.
+// Uses whitelist validation to prevent filter injection.
 
 export function subscribeToLeaderboard(
   category: LeaderboardCategory,
@@ -147,6 +155,12 @@ export function subscribeToLeaderboard(
   onChange: () => void
 ): () => void {
   if (!supabase) return () => {};
+
+  // Validate category against whitelist to prevent filter injection
+  if (!VALID_CATEGORIES.has(category)) {
+    console.warn("Invalid category for subscription:", category);
+    return () => {};
+  }
 
   const tableName = timeframe === "weekly" ? "leaderboard_weekly" : "leaderboard";
 

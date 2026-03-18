@@ -2,10 +2,12 @@
 // Client-side event batching and session snapshot reporting.
 // Events are queued in memory and flushed every FLUSH_INTERVAL_MS,
 // on page unload, and when the batch exceeds MAX_BATCH_SIZE.
+// All requests are HMAC-signed for authenticity.
 
 import { getPlayerId } from "../leaderboard/identity";
 import type { GameState } from "../engine/state";
 import { ALL_ARCHETYPES } from "../engine/state";
+import { signedFetch, signedBeacon } from "../security/hmac";
 
 // ── Config ────────────────────────────────────────────────────────────
 
@@ -19,7 +21,6 @@ const API_ENDPOINT = "/api/analytics";
 interface QueuedEvent {
   event: string;
   data?: Record<string, unknown>;
-  ts: number;
 }
 
 const sessionId = crypto.randomUUID();
@@ -88,11 +89,7 @@ export function trackEvent(
 ): void {
   if (!initialized) return;
 
-  eventQueue.push({
-    event,
-    data,
-    ts: Date.now(),
-  });
+  eventQueue.push({ event, data });
 
   // Auto-flush if batch is large
   if (eventQueue.length >= MAX_BATCH_SIZE) {
@@ -128,22 +125,17 @@ function flush(): void {
   const batch = eventQueue.splice(0); // Take all queued events
   const playerId = getPlayerId();
 
-  // Use sendBeacon for reliability on page unload
-  const payload = JSON.stringify({
+  const payload = {
     playerId,
     sessionId,
     events: batch,
-  });
+  };
 
+  // Use signed beacon (keepalive fetch) on page hide, signed fetch otherwise
   if (document.visibilityState === "hidden") {
-    navigator.sendBeacon(API_ENDPOINT, payload);
+    signedBeacon(API_ENDPOINT, payload);
   } else {
-    fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-      keepalive: true,
-    }).catch(() => {
+    signedFetch(API_ENDPOINT, payload, { keepalive: true }).catch(() => {
       // Silently fail — analytics should never break gameplay
     });
   }
@@ -209,20 +201,15 @@ function sendSnapshot(): void {
     userAgent: navigator.userAgent.slice(0, 200),
   };
 
-  const payload = JSON.stringify({
+  const payload = {
     playerId,
     sessionId,
     snapshot,
-  });
+  };
 
   if (document.visibilityState === "hidden") {
-    navigator.sendBeacon(API_ENDPOINT, payload);
+    signedBeacon(API_ENDPOINT, payload);
   } else {
-    fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-      keepalive: true,
-    }).catch(() => {});
+    signedFetch(API_ENDPOINT, payload, { keepalive: true }).catch(() => {});
   }
 }
