@@ -48,12 +48,24 @@ export async function fetchLeaderboard(
   const tableName = timeframe === "weekly" ? "leaderboard_weekly" : "leaderboard";
   const isAsc = category === "fastestPrestige";
 
-  const { data, error, count } = await supabase
+  // Decimal categories (totalRPAllTime, clickCount) need exponent-first sorting
+  // because the `value` column overflows to 1e308 for very large Decimals.
+  const isDecimalCategory = category === "totalRPAllTime" || category === "clickCount";
+
+  let query = supabase
     .from(tableName)
     .select("*", { count: "exact" })
-    .eq("category", category)
-    .order("value", { ascending: isAsc })
-    .limit(limit);
+    .eq("category", category);
+
+  if (isDecimalCategory) {
+    query = query
+      .order("value_exponent", { ascending: isAsc })
+      .order("value_mantissa", { ascending: isAsc });
+  } else {
+    query = query.order("value", { ascending: isAsc });
+  }
+
+  const { data, error, count } = await query.limit(limit);
 
   if (error || !data) {
     console.warn("Leaderboard fetch error:", error?.message);
@@ -77,16 +89,32 @@ export async function fetchLeaderboard(
   let playerRank = playerEntry?.rank ?? null;
 
   // If player is not in top N, query their rank
-  if (!playerRank) {
-    const op = isAsc ? "lte" : "gte";
-    const { count: betterCount } = await supabase
-      .from(tableName)
-      .select("*", { count: "exact", head: true })
-      .eq("category", category)
-      [op]("value", data.length > 0 ? data[data.length - 1].value : 0);
+  if (!playerRank && data.length > 0) {
+    const lastRow = data[data.length - 1];
 
-    if (betterCount != null) {
-      playerRank = betterCount + 1;
+    if (isDecimalCategory) {
+      // For Decimal categories, count entries with higher exponent,
+      // or same exponent + higher mantissa
+      const { count: betterCount } = await supabase
+        .from(tableName)
+        .select("*", { count: "exact", head: true })
+        .eq("category", category)
+        .gte("value_exponent", lastRow.value_exponent ?? 0);
+
+      if (betterCount != null) {
+        playerRank = betterCount + 1;
+      }
+    } else {
+      const op = isAsc ? "lte" : "gte";
+      const { count: betterCount } = await supabase
+        .from(tableName)
+        .select("*", { count: "exact", head: true })
+        .eq("category", category)
+        [op]("value", lastRow.value);
+
+      if (betterCount != null) {
+        playerRank = betterCount + 1;
+      }
     }
   }
 

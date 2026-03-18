@@ -121,13 +121,18 @@
     }
   }
 
+  /** Convert a Decimal safely — avoids Infinity for huge values. */
+  function safeDecimalValue(d: { mantissa: number; exponent: number; toNumber: () => number }): { value: number; mantissa: number; exponent: number } {
+    // For exponents that fit in a float, use toNumber; otherwise cap value at 1e308
+    const value = d.exponent > 308 ? 1e308 : d.toNumber();
+    return { value: isFinite(value) ? value : 1e308, mantissa: d.mantissa, exponent: d.exponent };
+  }
+
   function getPlayerValue(cat: LeaderboardCategory): { value: number; mantissa: number; exponent: number } {
     void rev;
     switch (cat) {
-      case "totalRPAllTime": {
-        const d = state.totalRPAllTime;
-        return { value: d.toNumber(), mantissa: d.mantissa, exponent: d.exponent };
-      }
+      case "totalRPAllTime":
+        return safeDecimalValue(state.totalRPAllTime);
       case "fastestPrestige":
         return { value: state.fastestPrestigeSec ?? Infinity, mantissa: state.fastestPrestigeSec ?? Infinity, exponent: 0 };
       case "ascensionCount":
@@ -136,10 +141,8 @@
         return { value: state.madness.madnessLevel, mantissa: state.madness.madnessLevel, exponent: 0 };
       case "challengesCompleted":
         return { value: state.completedChallenges.length, mantissa: state.completedChallenges.length, exponent: 0 };
-      case "clickCount": {
-        const d = state.clickCount;
-        return { value: d.toNumber(), mantissa: d.mantissa, exponent: d.exponent };
-      }
+      case "clickCount":
+        return safeDecimalValue(state.clickCount);
     }
   }
 

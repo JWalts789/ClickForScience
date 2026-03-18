@@ -195,7 +195,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   const { data: existing } = await supabase
     .from("leaderboard")
-    .select("value, value_exponent")
+    .select("value, value_mantissa, value_exponent")
     .eq("player_id", payload.playerId)
     .eq("category", payload.category)
     .maybeSingle();
@@ -203,13 +203,16 @@ export default async function handler(req: Request): Promise<Response> {
   let shouldUpdate = true;
   if (existing) {
     if (isAsc) {
+      // For "fastest", lower is better — use raw value (always small numbers)
       shouldUpdate = value < existing.value;
     } else {
+      // For Decimal categories, compare exponent first, then mantissa
       const existingExp = existing.value_exponent ?? 0;
+      const existingMantissa = existing.value_mantissa ?? existing.value;
       if (valueExponent > existingExp) {
         shouldUpdate = true;
       } else if (valueExponent === existingExp) {
-        shouldUpdate = value > existing.value;
+        shouldUpdate = valueMantissa > existingMantissa;
       } else {
         shouldUpdate = false;
       }
