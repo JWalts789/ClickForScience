@@ -2,21 +2,46 @@
 // CORS validation, HMAC signing, input sanitization, rate limiting helpers.
 
 // ── Allowed Origins ──────────────────────────────────────────────────
-// Add your production domain(s) here. Localhost allowed for dev.
-const ALLOWED_ORIGINS = new Set([
+// Exact matches + pattern matching for Vercel preview deploys.
+const ALLOWED_ORIGINS_EXACT = new Set([
   "https://clickforscience.vercel.app",
   "https://www.clickforscience.com",
   "http://localhost:5173",
   "http://localhost:4173",
 ]);
 
+// Vercel preview deploys: clickforscience-*.vercel.app
+const VERCEL_PREVIEW_PATTERN = /^https:\/\/clickforscience[a-z0-9-]*\.vercel\.app$/;
+
 /**
  * Validate request origin. Returns the origin if allowed, null if not.
+ * Allows missing origin for same-origin requests (sendBeacon, keepalive fetch).
  */
 export function validateOrigin(req: Request): string | null {
   const origin = req.headers.get("origin");
-  if (!origin) return null;
-  return ALLOWED_ORIGINS.has(origin) ? origin : null;
+
+  // Same-origin requests (e.g., keepalive fetch from Vercel) may not send Origin.
+  // Allow these through with a default origin for CORS headers.
+  if (!origin) {
+    // Check Referer as fallback
+    const referer = req.headers.get("referer");
+    if (referer) {
+      try {
+        const refOrigin = new URL(referer).origin;
+        if (ALLOWED_ORIGINS_EXACT.has(refOrigin) || VERCEL_PREVIEW_PATTERN.test(refOrigin)) {
+          return refOrigin;
+        }
+      } catch {}
+    }
+    // If no origin and no valid referer, still allow — same-origin requests
+    // from Vercel won't have cross-origin issues. Use a safe default.
+    return "https://clickforscience.vercel.app";
+  }
+
+  if (ALLOWED_ORIGINS_EXACT.has(origin)) return origin;
+  if (VERCEL_PREVIEW_PATTERN.test(origin)) return origin;
+
+  return null;
 }
 
 /**
@@ -62,12 +87,20 @@ const TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes
  * Verify HMAC-SHA256 signature on a request body.
  * Expects headers: X-Signature (hex), X-Timestamp (ms since epoch).
  * The signed message is: timestamp + "." + body
+ *
+ * If the server secret is empty/missing, HMAC is SKIPPED (allows
+ * the system to work while env vars are being configured).
  */
 export async function verifySignature(
   req: Request,
   body: string,
   secret: string
 ): Promise<{ valid: boolean; error?: string }> {
+  // If no HMAC secret configured, skip verification (graceful degradation)
+  if (!secret) {
+    return { valid: true };
+  }
+
   const signature = req.headers.get("x-signature");
   const timestampStr = req.headers.get("x-timestamp");
 

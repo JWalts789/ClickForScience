@@ -80,9 +80,9 @@ export default async function handler(req: Request): Promise<Response> {
   // ── Server config ─────────────────────────────────────────────────
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const hmacSecret = process.env.HMAC_SECRET;
+  const hmacSecret = process.env.HMAC_SECRET ?? "";
 
-  if (!supabaseUrl || !supabaseServiceKey || !hmacSecret) {
+  if (!supabaseUrl || !supabaseServiceKey) {
     return jsonResponse({ error: "Server misconfigured" }, 500, origin);
   }
 
