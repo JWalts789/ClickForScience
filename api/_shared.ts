@@ -5,6 +5,7 @@
 // Exact matches + pattern matching for Vercel preview deploys.
 const ALLOWED_ORIGINS_EXACT = new Set([
   "https://clickforscience.vercel.app",
+  "https://clickforscience.com",
   "https://www.clickforscience.com",
   "http://localhost:5173",
   "http://localhost:4173",
